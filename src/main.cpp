@@ -2005,8 +2005,11 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
         int64_t nCalculatedStakeReward = GetProofOfStakeReward(pindex->pprev, nCoinAge, nFees);
 
-        if (nStakeReward > nCalculatedStakeReward)
-            return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
+        if (nStakeReward > nCalculatedStakeReward){
+              if(pindex->nHeight != 198719 && pindex->nHeight != 226933 && pindex->nHeight != 253375 && pindex->nHeight != 254242 && pindex->nHeight != 254440){
+                    return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
+              }
+        }
     }
 
     // ppcoin: track money supply and mint amount info
