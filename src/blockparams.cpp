@@ -354,12 +354,10 @@ void VRX_Dry_Run(const CBlockIndex* pindexLast)
         }
     }
 
-    if(pindexBest->GetBlockTime() > 1602504000) {
-        if(pindexBest->GetBlockTime() < 1602504800) {
-            // Reset diff for fork (Tier 2 Masternode integration
-            fDryRun = true;
-            return;
-        }
+    if(pindexLast->nHeight == 93159) {
+         // Reset diff for fork (Tier 2 Masternode integration
+         fDryRun = true;
+         return;
     }
 
     // Test Fork
