@@ -522,8 +522,7 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
     {
         if(pindexBest->GetBlockTime() <= 1596024000) nSubsidy = 83 * COIN;
         else if(pindexBest->GetBlockTime() <= 1596304800) nSubsidy = 285 * COIN;
-        else if(pindexBest->GetBlockTime() <= 1596585600) nSubsidy = 125 * COIN;
-        else nSubsidy = 70.5 * COIN;
+        else nSubsidy = 125 * COIN;
 
         return nSubsidy + nFees;
     }
