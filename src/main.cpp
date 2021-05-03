@@ -1990,11 +1990,17 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     if (IsProofOfWork())
     {
         int64_t nReward = GetProofOfWorkReward(pindex->nHeight, nFees);
+        if (vtx[0].GetValueOut() != nReward)
+            LogPrint("ConnectBlock() : coinbase mismatch (actual=%d vs calculated=%d)", vtx[0].GetValueOut(), nReward);
         // Check coinbase reward
-        if (vtx[0].GetValueOut() > nReward)
-            return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)",
-                   vtx[0].GetValueOut(),
-                   nReward));
+        if (vtx[0].GetValueOut() > nReward){
+            if(IsInitialBlockDownload() && pindex->pprev->GetBlockTime() > nRewardSystemUpdate && vtx[0].GetValueOut() == nReward + (118 * COIN)){
+                // Allow tier 2 payments in sync
+                LogPrintf("IsProofOfWork() : Initial sync noticed possible tier 2 paid, allowing block...\n");
+            } else {
+                return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)", vtx[0].GetValueOut(), nReward));
+            }
+        }
     }
     if (IsProofOfStake())
     {
@@ -2005,10 +2011,16 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
         int64_t nCalculatedStakeReward = GetProofOfStakeReward(pindex->pprev, nCoinAge, nFees);
 
+        if (nStakeReward > nCalculatedStakeReward)
+            LogPrint("ConnectBlock() : coinstake mismatch (actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward);
+
         if (nStakeReward > nCalculatedStakeReward){
-              if(pindex->nHeight != 198719 && pindex->nHeight != 226933 && pindex->nHeight != 253375 && pindex->nHeight != 254242 && pindex->nHeight != 254440){
-                    return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
-              }
+            if(IsInitialBlockDownload() && nStakeReward == nCalculatedStakeReward + (118 * COIN)){
+                // Allow tier 2 payments in sync
+                LogPrintf("IsProofOfStake() : Initial sync noticed possible tier 2 paid, allowing block...\n");
+            } else {
+                return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
+            }
         }
     }
 
