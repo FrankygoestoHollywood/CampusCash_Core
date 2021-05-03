@@ -1991,7 +1991,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     {
         int64_t nReward = GetProofOfWorkReward(pindex->nHeight, nFees);
         if (vtx[0].GetValueOut() != nReward)
-            LogPrint("ConnectBlock() : coinbase mismatch (actual=%d vs calculated=%d)", vtx[0].GetValueOut(), nReward);
+            LogPrintf("ConnectBlock() : coinbase mismatch (actual=%d vs calculated=%d)", vtx[0].GetValueOut(), nReward);
         // Check coinbase reward
         if (vtx[0].GetValueOut() > nReward){
             if(IsInitialBlockDownload() && pindex->pprev->GetBlockTime() > nRewardSystemUpdate && vtx[0].GetValueOut() == nReward + (118 * COIN)){
@@ -2012,7 +2012,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         int64_t nCalculatedStakeReward = GetProofOfStakeReward(pindex->pprev, nCoinAge, nFees);
 
         if (nStakeReward > nCalculatedStakeReward)
-            LogPrint("ConnectBlock() : coinstake mismatch (actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward);
+            LogPrintf("ConnectBlock() : coinstake mismatch (actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward);
 
         if (nStakeReward > nCalculatedStakeReward){
             if(IsInitialBlockDownload() && nStakeReward == nCalculatedStakeReward + (118 * COIN)){
