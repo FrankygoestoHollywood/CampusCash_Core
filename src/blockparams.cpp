@@ -481,6 +481,9 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 //
 bool fMNtier2()
 {
+    // Disabling fMNtier2 while tier2 doesn't work
+    return false;
+    
     if(IsInitialBlockDownload()) return false;
 
     CTxIn vin;
@@ -590,7 +593,7 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
     if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
     {
         if(pindexBest->GetBlockTime() <= 1596024000) return 0;
-        else return 42 * COIN;
+        return 42 * COIN;
     }
     
     // Standard reward
@@ -615,7 +618,7 @@ int64_t GetDevOpsPayment(int nHeight, int64_t blockValue)
     {
         if(pindexBest->GetBlockTime() <= 1596024000) return 16 * COIN;
         if(pindexBest->GetBlockTime() <= 1596304801) return 28.5 * COIN;
-        else return 12.5 * COIN;
+        return 12.5 * COIN;
     }
     
     // Standard reward
