@@ -2982,7 +2982,7 @@ bool CBlock::AcceptBlock()
                CMasternode* pmn = mnodeman.Find(vin);
                 if(pmn != NULL) {
                     pmn->nLastPaid = GetAdjustedTime();
-                    LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d\n", pindexBest->nHeight);
+                    LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d , time : %d\n", pindexBest->nHeight, pmn->nLastPaid);
                 }
             }
 
@@ -3135,6 +3135,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
     vWorkQueue.push_back(hash);
+    bool findOrphans = false;
     for (unsigned int i = 0; i < vWorkQueue.size(); i++)
     {
         uint256 hashPrev = vWorkQueue[i];
@@ -3142,6 +3143,11 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
              mi != mapOrphanBlocksByPrev.upper_bound(hashPrev);
              ++mi)
         {
+            if(!findOrphans)
+            {
+                findOrphans = true;
+                LogPrintf("ProcessBlock: start processing orphan blocks, current nbr of orphans : %d\n", (unsigned long)mapOrphanBlocks.size());
+            }
             CBlock block;
             {
                 CDataStream ss(mi->second->vchBlock, SER_DISK, CLIENT_VERSION);
@@ -3155,6 +3161,12 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             delete mi->second;
         }
         mapOrphanBlocksByPrev.erase(hashPrev);
+    }
+
+    if(findOrphans)
+    {
+        findOrphans = false;
+        LogPrintf("ProcessBlock: finish processing orphan blocks, current nbr of orphans : %d\n", (unsigned long)mapOrphanBlocks.size());
     }
 
     LogPrintf("ProcessBlock: ACCEPTED\n");
