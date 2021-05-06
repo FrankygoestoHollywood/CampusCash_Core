@@ -2961,14 +2961,38 @@ bool CBlock::AcceptBlock()
     if (!AddToBlockIndex(nFile, nBlockPos, hashProof))
         return error("AcceptBlock() : AddToBlockIndex failed");
 
-    // Relay inventory, but don't relay old inventory during initial block download
-    int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
-    if (hashBestChain == hash)
+    if(!IsInitialBlockDownload())
     {
-        LOCK(cs_vNodes);
-        BOOST_FOREACH(CNode* pnode, vNodes)
-            if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
-                pnode->PushInventory(CInv(MSG_BLOCK, hash));
+        // Relay inventory, but don't relay old inventory during initial block download
+        int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
+        if (hashBestChain == hash)
+        {
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes)
+                if (nBestHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
+                    pnode->PushInventory(CInv(MSG_BLOCK, hash));
+        }
+
+        CTxIn vin;
+
+        if(!fImporting && !fReindex && pindexBest->nHeight > nBlockEstimate)
+        {
+            if(masternodePayments.GetWinningMasternode(pindexBest->nHeight, vin))
+            {
+               CMasternode* pmn = mnodeman.Find(vin);
+                if(pmn != NULL) {
+                    pmn->nLastPaid = GetAdjustedTime();
+                    LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d\n", pindexBest->nHeight);
+                }
+            }
+
+            if(!fLiteMode)
+            {
+                mnEnginePool.NewBlock(); 
+            }
+        } 
+     
+        masternodePayments.ProcessBlock(pindexBest->nHeight+1);
     }
 
     return true;
@@ -3131,43 +3155,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
             delete mi->second;
         }
         mapOrphanBlocksByPrev.erase(hashPrev);
-    }
-
-    // Try to get frist masternode in our list
-    CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
-    // If initial sync or we can't find a masternode in our list
-    if(!IsInitialBlockDownload() || winningNode){
-
-        CTxIn vin;
-
-        // If we're in LiteMode disable mnengine features without disabling masternodes
-        if (!fLiteMode && !fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate()){
-
-            if(masternodePayments.GetWinningMasternode(pindexBest->nHeight, vin)){
-                //UPDATE MASTERNODE LAST PAID TIME
-                CMasternode* pmn = mnodeman.Find(vin);
-                if(pmn != NULL) {
-                    pmn->nLastPaid = GetAdjustedTime();
-                }
-
-                LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d\n", pindexBest->nHeight);
-            }
-
-            mnEnginePool.CheckTimeout();
-            mnEnginePool.NewBlock();
-
-        } else if (fLiteMode && !fImporting && !fReindex && pindexBest->nHeight > Checkpoints::GetTotalBlocksEstimate())
-        {
-            if(masternodePayments.GetWinningMasternode(pindexBest->nHeight, vin)){
-                //UPDATE MASTERNODE LAST PAID TIME
-                CMasternode* pmn = mnodeman.Find(vin);
-                if(pmn != NULL) {
-                    pmn->nLastPaid = GetAdjustedTime();
-                }
-
-                LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d\n", pindexBest->nHeight);
-            }
-        }
     }
 
     LogPrintf("ProcessBlock: ACCEPTED\n");
