@@ -3091,7 +3091,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // If we don't already have its previous block, shunt it off to holding area until we get it
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
     {
-        LogPrintf("ProcessBlock: ORPHAN BLOCK %lu, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->hashPrevBlock.ToString());
+        LogPrintf("ProcessBlock: ORPHAN BLOCK %lu, prev=%s, time=%d\n", (unsigned long)mapOrphanBlocks.size(), pblock->hashPrevBlock.ToString(), pblock->GetBlockTime());
 
         // Accept orphans as long as there is a node to request its parents from
         if (pfrom) {

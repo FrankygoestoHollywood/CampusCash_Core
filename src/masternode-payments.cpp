@@ -273,7 +273,11 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     if(AddWinningMasternode(newWinner))
     {
         nLastBlockHeight = nBlockHeight;
-        LogPrintf("Masternode-Payments::ProcessBlock - SUCCESS - height = %d  winner : %s...\n", nBlockHeight, pmn->pubkey.GetID().ToString());
+        CTxDestination address1;
+        ExtractDestination(newWinner.payee, address1);
+        CCampusCashAddress address2(address1);
+
+        LogPrintf("Masternode-Payments::ProcessBlock - SUCCESS - height = %d  winner : %s...\n", nBlockHeight, address2.ToString().c_str());
         return true;
     }
 
