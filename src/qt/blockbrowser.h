@@ -6,7 +6,7 @@
 #include "main.h"
 #include "wallet.h"
 #include "base58.h"
-#include <QWidget>
+#include <QDialog>
 
 #include <QDir>
 #include <QFile>
@@ -19,16 +19,16 @@
 #include <QSlider>
 
 double getBlockHardness(int);
-double getTxTotalValue(const std::string&);
+double getTxTotalValue(std::string);
 double convertCoins(int64_t);
-double getTxFees(const std::string&);
+double getTxFees(std::string);
 int getBlockTime(int);
 int getBlocknBits(int);
 int getBlockNonce(int);
 int blocksInPastHours(int);
 int getBlockHashrate(int);
-std::string getInputs(const std::string &);
-std::string getOutputs(const std::string &);
+std::string getInputs(std::string);
+std::string getOutputs(std::string);
 std::string getBlockHash(int);
 std::string getBlockMerkle(int);
 bool addnode(std::string);
@@ -41,7 +41,7 @@ class BlockBrowser;
 }
 class WalletModel;
 
-class BlockBrowser : public QWidget
+class BlockBrowser : public QDialog
 {
     Q_OBJECT
 

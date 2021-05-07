@@ -369,8 +369,9 @@ CBlock* CreateNewBlock(CReserveKey& reservekey, bool fProofOfStake, int64_t* pFe
             LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
         // > CCASH <
         if (!fProofOfStake){
+            LogPrintf("CreateNewBlock(): starting PoW creation \n");
             pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight + 1, nFees);
-
+            LogPrintf("CreateNewBlock(): set PoW reward \n");
             // Check for payment update fork
             if(pindexBest->GetBlockTime() > 0){
                 if(pindexBest->GetBlockTime() > nPaymentUpdate_1){ // Monday, May 20, 2019 12:00:00 AM

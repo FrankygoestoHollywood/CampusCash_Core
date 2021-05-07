@@ -73,12 +73,12 @@ cd ~; wget http://download.oracle.com/berkeley-db/db-6.2.32.NC.tar.gz; tar zxf d
 
 ### GitHub pull (Source Download)
 ```
-cd ~; git clone https://github.com/SaltineChips/CampusCash CampusCash
+cd ~; git clone https://github.com/CampusCash/CampusCash_Release CampusCash
 ```
 
 ### Build CampusCash daemon
 ```
-cd ~; cd ~/CampusCash/src; chmod a+x obj; chmod a+x leveldb/build_detect_platform; chmod a+x secp256k1; chmod a+x leveldb; chmod a+x ~/CampusCash/src; chmod a+x ~/CampusCash; make -f makefile.unix USE_UPNP=-; cd ~; cp -r ~/CampusCash/src/CampusCashd /usr/local/bin/CampusCashd;
+cd ~; cd ~/CampusCash_Release/src; chmod a+x obj; chmod a+x leveldb/build_detect_platform; chmod a+x secp256k1; chmod a+x leveldb; chmod a+x ~/CampusCash_Release/src; chmod a+x ~/CampusCash_Release; make -f makefile.unix USE_UPNP=-; cd ~; cp -r ~/CampusCash_Release/src/CampusCashd /usr/local/bin/CampusCashd;
 ```
 
 ### (Optional) Build CampusCash-QT (GUI wallet) on Linux 
@@ -177,8 +177,10 @@ Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/SaltineChips/CampusCash/Tags) are created
+*completely* stable. [Tags](https://github.com/CampusCash/CampusCash_Release/Tags) are created
 regularly to indicate new official, stable release versions of CampusCash [CCASH].
+
+There will be a series of new test branches to lessen the confusion of the GitHub.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 

@@ -16,6 +16,7 @@
 #include "wallet.h"
 #include "ui_interface.h"
 #include "paymentserver.h"
+
 #ifdef Q_OS_MAC
 #include "macdockiconhandler.h"
 #endif
@@ -40,7 +41,7 @@ Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 #endif
 
 // Need a global reference for the notifications to find the GUI
-static CampusCashGUI *guiref;
+CampusCashGUI *guiref;
 static QSplashScreen *splashref;
 
 static void ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
@@ -87,7 +88,7 @@ static void InitMessage(const std::string &message)
 
         if(!fUseDarkTheme)
         {
-            splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(97,78,176));
+            splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(225,193,62)); // Splash.png character color
         }
 
         QApplication::instance()->processEvents();
@@ -257,6 +258,8 @@ int main(int argc, char *argv[])
     {
         if (fUseDarkTheme)
             GUIUtil::SetDarkThemeQSS(app);
+        else
+            GUIUtil::SetLightThemeQSS(app);
 
         // Regenerate startup link, to fix links to old versions
         if (GUIUtil::GetStartOnSystemStartup())

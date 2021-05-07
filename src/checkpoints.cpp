@@ -43,17 +43,19 @@ namespace Checkpoints
         (43500,    uint256("0x85bad7c9d35fe4b8af008ddab416f3df56d1287f360d5d4c76abe19dc5c3eafa"))
         (75000,    uint256("0x00000000003aba90a7e55ce85b9e6fa9d5190c771e7bbc31bca2862506023bd9"))
         (93152,    uint256("0x1eb5327e1a7e2a8671670832748deede920d8c302c9f148299b95f68b1ebda03"))
-        (93160,    uint256("0x0002957c2e616c3a3965af78924b1c29ff70c81caa86b24b9c53baad96d3f3e3")) // Never Remove
+        (93160,    uint256("0x0002957c2e616c3a3965af78924b1c29ff70c81caa86b24b9c53baad96d3f3e3")) // Never Remove main.cpp
         (93162,    uint256("0x00032b5ce45d53b67c1cd9b371b75ec054e0bf7542663e8122677d87ea356dca"))
         (93175,    uint256("0x7ba9de6ba9c0493ad08ffa5e677da710f9b9dd9ac3c1e837e8c98509f301be79"))
         (100000,   uint256("0x000000000027a8aeae0cad7a2bde09c9cd073affb3c5e070a67e508b990dca40"))
         (125000,   uint256("0x8cce829d75931cab2bfab72258afc2ffc9afa454e65597de8f92ff928010df6f"))
         (180750,   uint256("0x00000000001ef025e017c3fb10f4c3f62f5230b6ce2f022ac19b73ca4a0e01f7"))
-        (198719,   uint256("0x75dcfb61d78bc665f7594782812b931777985563bdf64e06f84e95d1ff1c022c")) // Never Remove
+        (198719,   uint256("0x75dcfb61d78bc665f7594782812b931777985563bdf64e06f84e95d1ff1c022c")) // Never Remove main.cpp
         (200000,   uint256("0x9803fa4132bc11cdb465ff16bf0f8ff0f30bc9a2fb63e3985398235565f266f4"))
         (202884,   uint256("0x944ede48259183bf3e0867d90f1ae90fc76b18f990ee42e9048ec57741fce6d8"))
-        (226933,   uint256("0x9957578726e950382d499e55af8086a5b55ad869334947b51adc4681e41d55da")) // Never Remove
-        (253375,   uint256("0x4bac34cf01f45424daa5b19ccf2aa3be62ba7aa96e97a0c699572af2bb5eaa77")) // Never Remove
+        (226933,   uint256("0x9957578726e950382d499e55af8086a5b55ad869334947b51adc4681e41d55da")) // Never Remove main.cpp
+        (253375,   uint256("0x4bac34cf01f45424daa5b19ccf2aa3be62ba7aa96e97a0c699572af2bb5eaa77")) // Never Remove main.cpp
+        //(254242,   uint256("0x")) // Never Remove main.cpp
+        //(254440,   uint256("0x")) // Never Remove main.cpp
         (262168,   uint256("0x00000000002fb4bc686a0a6c9019971e60fbfc956b100f7e2fa86bda483fd536"))
     ;
 

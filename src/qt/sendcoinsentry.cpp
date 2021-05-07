@@ -7,10 +7,13 @@
 #include "walletmodel.h"
 #include "optionsmodel.h"
 #include "addresstablemodel.h"
+#include "fractal/fractalbvac.h"
 #include "stealth.h"
 
 #include <QApplication>
 #include <QClipboard>
+#include <QFileDialog>
+#include <QMessageBox>
 
 SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
     QFrame(parent),
@@ -74,7 +77,7 @@ void SendCoinsEntry::setModel(WalletModel *model)
     if(model && model->getOptionsModel())
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
-    connect(ui->payAmount, SIGNAL(textChanged()), this, SLOT(payAmountChanged()));
+    connect(ui->payAmount, SIGNAL(textChanged()), this, SIGNAL(payAmountChanged()));
 
     clear();
 }
@@ -184,5 +187,23 @@ void SendCoinsEntry::updateDisplayUnit()
     {
         // Update payAmount with the current unit
         ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
+    }
+}
+
+void SendCoinsEntry::on_BVAC_import_pubkey_clicked()
+{
+    // Have user select file to decode
+    QString BVAC_name = QFileDialog::getOpenFileName(nullptr, "BVAC Decoding: Select an Image" , ".", "Images (*.jpg)" );
+
+    deCode(BVAC_name.toStdString());
+
+    if(BVAC_run) {
+        // Set decoded pubkey
+        ui->payTo->setText(thatdata.c_str());
+    } else {
+        // Inform user of failure
+        QMessageBox::warning(this, "BVAC Decode Failure",
+                           "The BVAC system was unable to decode the file you selected, please make sure you have a valid BVAC image and try again.",
+                           QMessageBox::Ok );
     }
 }

@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = CampusCash-qt
-VERSION = 1.0.13.4
+VERSION = 1.1.5.3
 INCLUDEPATH += src src/json src/qt src/qt/plugins/mrichtexteditor
 QT += core gui widgets network printsupport
 DEFINES += ENABLE_WALLET
@@ -84,6 +84,7 @@ win32:QMAKE_LFLAGS *= -static-libgcc -static-libstdc++
 
 # use: qmake "USE_QRCODE=1"
 # libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
+USE_QRCODE=1
 contains(USE_QRCODE, 1) {
     message(Building with QRCode support)
     DEFINES += USE_QRCODE
@@ -288,6 +289,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/rpcserver.h \
     src/rpcvelocity.h \
     src/limitedmap.h \
+    src/qt/fractalui.h \
+    src/qt/tokenui.h \
     src/qt/overviewpage.h \
     src/qt/csvmodelwriter.h \
     src/crypter.h \
@@ -301,6 +304,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/paymentserver.h \
     src/ui_interface.h \
     src/qt/rpcconsole.h \
+    src/qt/rpcconsolesettings.h \
     src/version.h \
     src/velocity.h \
     src/netbase.h \
@@ -324,6 +328,14 @@ HEADERS += src/qt/bitcoingui.h \
     src/crypto/common/sha1.h \
     src/crypto/common/sha256.h \
     src/crypto/common/sha512.h \
+    src/stb/stb_image.h \
+    src/stb/stb_image_write.h \
+    src/fractal/fractalengine.h \
+    src/fractal/fractalcontract.h \
+    src/fractal/fractalparams.h \
+    src/fractal/fractaldataob.h \
+    src/fractal/fractalnft.h \
+    src/fractal/fractalbvac.h \
     src/qt/masternodemanager.h \
     src/qt/addeditadrenalinenode.h \
     src/qt/adrenalinenodeconfigdialog.h \
@@ -334,6 +346,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/sendmessagesdialog.h \
     src/qt/sendmessagesentry.h \
     src/qt/blockbrowser.h \
+    src/qt/settingspage.h \
+    src/qt/importprivatekeydialog.h \
     src/qt/plugins/mrichtexteditor/mrichtextedit.h \
     src/qt/qvalidatedtextedit.h \
     src/crypto/common/sph_bmw.h \
@@ -425,9 +439,18 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/notificator.cpp \
     src/qt/paymentserver.cpp \
     src/qt/rpcconsole.cpp \
+    src/qt/rpcconsolesettings.cpp \
     src/noui.cpp \
     src/kernel.cpp \
     src/pbkdf2.cpp \
+    src/qt/fractalui.cpp \
+    src/qt/tokenui.cpp \
+    src/fractal/fractalengine.cpp \
+    src/fractal/fractalcontract.cpp \
+    src/fractal/fractalparams.cpp \
+    src/fractal/fractaldataob.cpp \
+    src/fractal/fractalnft.cpp \
+    src/fractal/fractalbvac.cpp \
     src/support/cleanse.cpp \
     src/stealth.cpp \
     src/qt/flowlayout.cpp \
@@ -456,6 +479,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/sendmessagesdialog.cpp \
     src/qt/sendmessagesentry.cpp \
     src/qt/blockbrowser.cpp \
+    src/qt/settingspage.cpp \
     src/qt/qvalidatedtextedit.cpp \
     src/qt/plugins/mrichtexteditor/mrichtextedit.cpp \
     src/rpcsmessage.cpp \
@@ -480,6 +504,7 @@ FORMS += \
     src/qt/forms/sendcoinsentry.ui \
     src/qt/forms/askpassphrasedialog.ui \
     src/qt/forms/rpcconsole.ui \
+    src/qt/forms/rpcconsolesettings.ui \
     src/qt/forms/optionsdialog.ui \
     src/qt/forms/masternodemanager.ui \
     src/qt/forms/addeditadrenalinenode.ui \
@@ -488,6 +513,9 @@ FORMS += \
     src/qt/forms/sendmessagesentry.ui \
     src/qt/forms/sendmessagesdialog.ui \
     src/qt/forms/blockbrowser.ui \
+    src/qt/forms/settingspage.ui \
+    src/qt/forms/fractalui.ui \
+    src/qt/forms/tokenui.ui \
     src/qt/plugins/mrichtexteditor/mrichtextedit.ui
 
 contains(USE_QRCODE, 1) {

@@ -10,6 +10,32 @@
 
 #include <sstream>
 #include <string>
+
+BlockBrowser::BlockBrowser(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::BlockBrowser)
+{
+    ui->setupUi(this);
+
+    setFixedSize(880, 500);
+
+    connect(ui->blockButton, SIGNAL(pressed()), this, SLOT(blockClicked()));
+    connect(ui->txButton, SIGNAL(pressed()), this, SLOT(txClicked()));
+}
+
+void BlockBrowser::setModel(WalletModel *model)
+{
+    if(model) {
+        this->model = model;
+        setWindowTitle(QString("Block Browser"));
+    }
+}
+
+BlockBrowser::~BlockBrowser()
+{
+    delete ui;
+}
+
 double getBlockHardness(int height)
 {
     const CBlockIndex* blockindex = getBlockIndex(height);
@@ -154,7 +180,7 @@ int blocksInPastHours(int hours)
     return 0;
 }
 
-double getTxTotalValue(const std::string &txid)
+double getTxTotalValue(std::string txid)
 {
     uint256 hash;
     hash.SetHex(txid);
@@ -185,7 +211,7 @@ double convertCoins(int64_t amount)
     return (double)amount / (double)COIN;
 }
 
-std::string getOutputs(const std::string &txid)
+std::string getOutputs(std::string txid)
 {
     uint256 hash;
     hash.SetHex(txid);
@@ -220,7 +246,7 @@ std::string getOutputs(const std::string &txid)
     return str;
 }
 
-std::string getInputs(const std::string &txid)
+std::string getInputs(std::string txid)
 {
     uint256 hash;
     hash.SetHex(txid);
@@ -279,10 +305,11 @@ int64_t getInputValue(CTransaction tx, CScript target)
     return 0;
 }
 
-double getTxFees(const std::string &txid)
+double getTxFees(std::string txid)
 {
     uint256 hash;
     hash.SetHex(txid);
+
 
     CTransaction tx;
     uint256 hashBlock = 0;
@@ -321,19 +348,6 @@ double getTxFees(const std::string &txid)
     }
 
     return value0 - value;
-}
-
-
-BlockBrowser::BlockBrowser(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::BlockBrowser)
-{
-    ui->setupUi(this);
-
-    setFixedSize(400, 420);
-
-    connect(ui->blockButton, SIGNAL(pressed()), this, SLOT(blockClicked()));
-    connect(ui->txButton, SIGNAL(pressed()), this, SLOT(txClicked()));
 }
 
 void BlockBrowser::updateExplorer(bool block)
@@ -432,14 +446,4 @@ void BlockBrowser::txClicked()
 void BlockBrowser::blockClicked()
 {
     updateExplorer(true);
-}
-
-void BlockBrowser::setModel(WalletModel *model)
-{
-    this->model = model;
-}
-
-BlockBrowser::~BlockBrowser()
-{
-    delete ui;
 }

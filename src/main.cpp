@@ -1991,23 +1991,34 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     {
         int64_t nReward = GetProofOfWorkReward(pindex->nHeight, nFees);
         // Check coinbase reward
-        if (vtx[0].GetValueOut() > nReward)
-            return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)",
-                   vtx[0].GetValueOut(),
-                   nReward));
+        if (vtx[0].GetValueOut() > nReward) {
+            if(IsInitialBlockDownload() && vtx[0].GetValueOut() == nReward + (129.8 * COIN)){
+                // Allow tier 2 payments in sync
+                LogPrintf("IsProofOfWork() : Initial sync noticed possible tier 2 paid, allowing block...\n");
+            } else {
+                return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)",
+                       vtx[0].GetValueOut(),
+                       nReward));
+            }
+        }
     }
     if (IsProofOfStake())
     {
         // ppcoin: coin stake tx earns reward instead of paying fee
         uint64_t nCoinAge;
-        if (!vtx[1].GetCoinAge(txdb, pindex->pprev, nCoinAge))
+        if (!vtx[1].GetCoinAge(txdb, pindex->pprev, nCoinAge)){
             return error("ConnectBlock() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString());
-
+        }
         int64_t nCalculatedStakeReward = GetProofOfStakeReward(pindex->pprev, nCoinAge, nFees);
 
         if (nStakeReward > nCalculatedStakeReward){
               if(pindex->nHeight != 198719 && pindex->nHeight != 226933 && pindex->nHeight != 253375 && pindex->nHeight != 254242 && pindex->nHeight != 254440){
+                  if(IsInitialBlockDownload() && vtx[0].GetValueOut() == nStakeReward + (129.8 * COIN)){
+                      // Allow tier 2 payments in sync
+                      LogPrintf("IsProofOfWork() : Initial sync noticed possible tier 2 paid, allowing block...\n");
+                  } else {
                     return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
+                  }
               }
         }
     }
@@ -2625,7 +2636,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
         bDevOpsPayment = false;
     }
     // Run checks if at fork height
-    if(0>1) // bDevOpsPayment
+    if(bDevOpsPayment && nBestHeight > 330000)
     {
         int64_t nStandardPayment = 0;
         int64_t nMasternodePayment = 0;
@@ -2672,8 +2683,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
             nMasterNodeChecksEngageTime = nMasterNodeChecksDelayBaseTime + nMasterNodeChecksDelay;
         }
         // Devops Address Set and Updates
-        strVfyDevopsAddress = "CcABDmWkcSZPw8rMtoobShVFuudhf1svZu"; // CVGQAbKX5MvmsSN4x1GeCNqNsxzkPJuWEW
-        if(pindexBest->GetBlockTime() < nPaymentUpdate_2) { strVfyDevopsAddress = Params().DevOpsAddress(); }
+        strVfyDevopsAddress = Params().DevOpsAddress(); // Make sure this is correct
         // Check PoW or PoS payments for current block
         for (unsigned int i=0; i < vtx[isProofOfStake].vout.size(); i++) {
             // Define values
@@ -2716,30 +2726,16 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                        LogPrintf("CheckBlock() : PoS Recipient devops address validity succesfully verified\n");
                    } else {
                        LogPrintf("CheckBlock() : PoS Recipient devops address validity could not be verified\n");
-                       // Skip check during transition to new DevOps
-                       if (pindexBest->GetBlockTime() < nPaymentUpdate_3) {//TODO: Clean this up
-                           // Check legacy blocks for valid payment, only skip for Update_2
-                           if (pindexBest->GetBlockTime() < nPaymentUpdate_2) {//TODO: Clean this up
-                               fBlockHasPayments = false;
-                           }
-                       } else {
-                           // Re-enable enforcement post transition (Update_3)
-                           fBlockHasPayments = false;
-                       }
+                       fBlockHasPayments = false;
                    }
                    if (nIndexedDevopsPayment == nDevopsPayment) {
                        LogPrintf("CheckBlock() : PoS Recipient devops amount validity succesfully verified\n");
                    } else {
-                       if (pindexBest->GetBlockTime() < nPaymentUpdate_2) {
-                           LogPrintf("CheckBlock() : PoS Recipient devops amount validity could not be verified\n");
-                           fBlockHasPayments = false;
+                       if (nIndexedDevopsPayment >= nDevopsPayment) {
+                           LogPrintf("CheckBlock() : PoS Reciepient devops amount is abnormal due to large fee paid");
                        } else {
-                           if (nIndexedDevopsPayment >= nDevopsPayment) {
-                               LogPrintf("CheckBlock() : PoS Reciepient devops amount is abnormal due to large fee paid");
-                           } else {
-                               LogPrintf("CheckBlock() : PoS Reciepient devops amount validity could not be verified");
-                               fBlockHasPayments = false;
-                           }
+                           LogPrintf("CheckBlock() : PoS Reciepient devops amount validity could not be verified");
+                           fBlockHasPayments = false;
                        }
                    }
                 }
@@ -2775,30 +2771,16 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                       LogPrintf("CheckBlock() : PoW Recipient devops address validity succesfully verified\n");
                    } else {
                        LogPrintf("CheckBlock() : PoW Recipient devops address validity could not be verified\n");
-                       // Skip check during transition to new DevOps
-                       if (pindexBest->GetBlockTime() < nPaymentUpdate_3) {
-                           // Check legacy blocks for valid payment, only skip for Update_2
-                           if (pindexBest->GetBlockTime() < nPaymentUpdate_2) {
-                               fBlockHasPayments = false;
-                           }
-                       } else {
-                           // Re-enable enforcement post transition (Update_3)
-                           fBlockHasPayments = false;
-                       }
+                       fBlockHasPayments = false;
                    }
                    if (nAmount == nDevopsPayment) {
                       LogPrintf("CheckBlock() : PoW Recipient devops amount validity succesfully verified\n");
                    } else {
-                       if (pindexBest->GetBlockTime() < nPaymentUpdate_2) {
-                           LogPrintf("CheckBlock() : PoW Recipient devops amount validity could not be verified\n");
-                           fBlockHasPayments = false;
+                       if (nIndexedDevopsPayment >= nDevopsPayment) {
+                           LogPrintf("CheckBlock() : PoW Reciepient devops amount is abnormal due to large fee paid");
                        } else {
-                           if (nIndexedDevopsPayment >= nDevopsPayment) {
-                               LogPrintf("CheckBlock() : PoW Reciepient devops amount is abnormal due to large fee paid");
-                           } else {
-                               LogPrintf("CheckBlock() : PoW Reciepient devops amount validity could not be verified");
-                               fBlockHasPayments = false;
-                           }
+                           LogPrintf("CheckBlock() : PoW Reciepient devops amount validity could not be verified");
+                           fBlockHasPayments = false;
                        }
                    }
                 }
@@ -2910,8 +2892,8 @@ bool CBlock::AcceptBlock()
 
     // Check proof-of-work or proof-of-stake
     if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake())) {
-            LogPrintf("AcceptBlock() : expected difficulty %d, but found %d\n", nBits, GetNextTargetRequired(pindexPrev, IsProofOfStake()));
-            return DoS(100, error("AcceptBlock() : incorrect %s", IsProofOfWork() ? "proof-of-work" : "proof-of-stake"));
+        LogPrintf("AcceptBlock() : expected difficulty %d, but found %d\n", nBits, GetNextTargetRequired(pindexPrev, IsProofOfStake()));
+        return DoS(100, error("AcceptBlock() : incorrect %s", IsProofOfWork() ? "proof-of-work" : "proof-of-stake"));
     }
 
     // Check timestamp against prev

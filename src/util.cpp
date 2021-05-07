@@ -120,6 +120,9 @@ bool fMnAdvRelay = false;
 //MasterNode tier 2
 bool fMnT2 = false;
 bool fMnWnr = false;
+//Logic for lock/unlock GUI icon
+//does not affect daemon operation
+bool settingsStatus = false;
 int64_t nMNpayBlockHeight = 0;
 CScript cMNpayee;
 //Max Blockheight Value
@@ -1232,40 +1235,10 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
                fprintf(ConfFile, "rpcport=18695\n");
                fprintf(ConfFile, "rpcconnect=127.0.0.1\n");
                fprintf(ConfFile, "rpcallowip=127.0.0.1\n");
-               fprintf(ConfFile, "addnode=45.77.210.8:19427\n");
-               fprintf(ConfFile, "addnode=45.77.210.8\n");
-               fprintf(ConfFile, "addnode=45.77.210.234:19427\n");
-               fprintf(ConfFile, "addnode=45.77.210.234\n");
-               fprintf(ConfFile, "addnode=192.168.1.14:19427\n");
-               fprintf(ConfFile, "addnode=192.168.1.14\n");
-               fprintf(ConfFile, "addnode=104.238.156.128:19427\n");
-               fprintf(ConfFile, "addnode=104.238.156.128\n");
-               fprintf(ConfFile, "addnode=66.42.71.176:19427\n");
-               fprintf(ConfFile, "addnode=66.42.71.176\n");
-               fprintf(ConfFile, "addnode=110.109.107.71:19427\n");
-               fprintf(ConfFile, "addnode=110.109.107.71\n");
-               //fprintf(ConfFile, "addnode=82.165.119.20:19427\n");
-               //fprintf(ConfFile, "addnode=82.165.119.20\n");
-               //fprintf(ConfFile, "addnode=82.165.115.26:19427\n");
-               //fprintf(ConfFile, "addnode=82.165.115.26\n");
-               //fprintf(ConfFile, "addnode=217.160.29.63:19427\n");
-               //fprintf(ConfFile, "addnode=217.160.29.63\n");
                fprintf(ConfFile, "addnode=138.197.161.183:19427\n");
                fprintf(ConfFile, "addnode=138.197.161.183\n");
                fprintf(ConfFile, "addnode=157.230.107.144:19427\n");
                fprintf(ConfFile, "addnode=157.230.107.144\n");
-               fprintf(ConfFile, "addnode=137.220.34.237:19427\n");
-               fprintf(ConfFile, "addnode=137.220.34.237\n");
-               fprintf(ConfFile, "addnode=184.166.67.221:19427\n");
-               fprintf(ConfFile, "addnode=184.166.67.221\n");
-               fprintf(ConfFile, "addnode=167.99.88.37:19427\n");
-               fprintf(ConfFile, "addnode=167.99.88.37\n");
-               fprintf(ConfFile, "addnode=152.89.106.95\n");
-               fprintf(ConfFile, "addnode=152.89.106.95:19427\n");
-               fprintf(ConfFile, "addnode=188.68.33.155\n");
-               fprintf(ConfFile, "addnode=188.68.33.155:19427\n");
-               fprintf(ConfFile, "addnode=5.45.108.38\n");
-               fprintf(ConfFile, "addnode=5.45.108.38:19427\n");
                fclose(ConfFile);
     }
 

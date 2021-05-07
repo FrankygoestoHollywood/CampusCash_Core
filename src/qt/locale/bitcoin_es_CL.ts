@@ -15,7 +15,7 @@
         <location line="+41"/>
         <source>Copyright © 2009-2014 The Bitcoin developers
 Copyright © 2012-2014 The NovaCoin developers
-Copyright © 2014 The CampusCash developers</source>
+Copyright © 2020-2021 The CampusCash developers</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1865,7 +1865,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+29"/>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation>La dirección de destinatarion no es valida, comprueba otra vez.</translation>
+        <translation>La dirección de destinatrev no es valida, comprueba otra vez.</translation>
     </message>
     <message>
         <location line="+5"/>

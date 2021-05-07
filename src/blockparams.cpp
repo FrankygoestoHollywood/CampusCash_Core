@@ -354,8 +354,23 @@ void VRX_Dry_Run(const CBlockIndex* pindexLast)
         }
     }
 
-    if(pindexBest->GetBlockTime() > 1602504000) {
-        if(pindexBest->GetBlockTime() < 1602504800) {
+    if(pindexLast->nHeight == 93159) {
+         // Reset diff for fork (Tier 2 Masternode integration
+         fDryRun = true;
+         return;
+    }
+
+    if(pindexBest->GetBlockTime() > 1615772725){
+        if(pindexBest->GetBlockTime() < 1615773325){
+            // Reset diff for fork (Tier 2 Masternode integration
+            fDryRun = true;
+            return;
+        }
+    }
+
+    //Friday, March 26, 2021 1:03:11 PM - Saturday, March 27, 2021 12:00:00 PM (GMT)
+    if(pindexBest->GetBlockTime() > 1616763791){
+        if(pindexBest->GetBlockTime() < 1616846400){
             // Reset diff for fork (Tier 2 Masternode integration
             fDryRun = true;
             return;
@@ -368,7 +383,7 @@ void VRX_Dry_Run(const CBlockIndex* pindexLast)
             fDryRun = true;
             return;
         }
-    }// TODO setup next testing fork
+    }
 
     // Standard, non-Dry Run
     fDryRun = false;
@@ -437,46 +452,37 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 // Coin base subsidy
 //
 //
-// Reward calculations for 25-years of CCASH emissions
-// 10 Billion Total     | 8 Billion Premine
-// 100% Remaining CCASH   : 2,000,000,000
+// Reward calculations for CCASH emissions
+// 4 Billion Total     | 200 Million Premine
+// 100% Remaining CCASH   : 3,800,000,000
 // ----------------------------------
-// Block numbers based on 2-minute blocktime average
-// (Not including initial 250 starting blocks)
-// Blocks per day       :     720
-// Blocks per month     :  21,600
-// Blocks per year      : 262,800
+// Block numbers based on 1-minute blocktime average
+// (Not including initial 100 starting blocks)
+// Blocks per day       : (1* 60) * 24 = 1,440
+// Blocks per month     : 1,440 * 30.436875 = 43,829.1 = [43,829]
+// Blocks per year      : 525,949.2 = [525,949]
 // ----------------------------------
-// 100% for Calculations: 720 blocks per day
-// Payout per block     : 300 CCASH
-// Payout per day       : 300 * ((1 * 60 * 60) / (2 * 60) * 24)                   =       216,000 CCASH
-// Payout per month     : 300 * (((1 * 60 * 60) / (2 * 60) * 24) * 30)            =     6,480,000 CCASH
-// Payout per year      : 300 * (((1 * 60 * 60) / (2 * 60) * 24) * 365)           =    78,840,000 CCASH
-// Mineout              : 300 * (25.36 * (((1 * 60 * 60) / (2 * 60) * 24) * 365)) = 2,000,000,000 CCASH
+// 100% for Calculations: 1,440 blocks per day
+// Payout per block     : 125 CCASH
+// Payout per day       : 125 * ((1 * 60 * 60) / (1 * 60) * 24)                                             =  180,000 CCASH
+// Payout per month     : 125 * (((1 * 60 * 60) / (1 * 60) * 24) * 30) || 180,000 * 30.436875               =  5,478,637.5 CCASH
+// Payout per year      : 125 * (((1 * 60 * 60) / (1 * 60) * 24) * 365) || 5,478,637.5 * 12                 =  65,743,650 CCASH
 // ----------------------------------
 // (Network Allocation) (BLOCKS | 25-Years of minting)
-// Singular Payout      : 150-->50 CCASH
-// Maternode Payout     : 100-->200 CCASH
-// DevOps Payout        : 50 CCASH
+// Singular Payout      : 125-->70.5 CCASH
+// Maternode Payout     : 54.5-->42 CCASH
+// DevOps Payout        : 12.5 CCASH
 // ----------------------------------
 // (PLEASE NOTE)
 // Masternode Payout is calculated based on the assumption of starting payout date of Masternode Payout and
-// DevOps payout matching in terms of start date. 
+// DevOps payout matching in terms of start date.
 // DevOps may or may not start at at the same time as the Masternode Payouts at which point the numbers
 // will be skewed off slightly in either direction.
 // This is the same for DevOps payout, it is assumed for its calculations that it starts with Masternode
 // Payouts.
 // ----------------------------------
-// (Masternode | Network) SeeSaw
-// Increment step       : 20% step
-// Interval             : 30 blocks
-// Step per Interval    : 1 (20% step per interval)
-// Steps per swing      : 5 Steps up or down 
-// Epoch (SeeSaw finish): 15 Intervals
-// Upswing Duration     : 5 Intervals
-// Downswing Duration   : 5 Intervals
-// Idle Duration        : 5 Intervals (no adjustment)
-//
+
+// Will Correct Mathematics when Tier 2 Masternodes come online.
 
 //
 // Masternode Tier 2 Payout Toggle
@@ -491,8 +497,9 @@ bool fMNtier2()
 
     // Set TX values
     CTxIn vin;
+    LogPrintf("MasterNode Tier Search: Started looking for Tier type \n");
     //spork
-    if(masternodePayments.GetWinningMasternode(pindexPrev->nHeight+1, vin)){
+    if(masternodePayments.GetWinningMasternode(pindexBest->nHeight+1, vin)){
         LogPrintf("MasterNode Tier Payment Toggle : Found MasterNode winner!\n");
         if(fMnT2){
             LogPrintf("MasterNode Tier Found: Tier-2\n");
@@ -518,24 +525,35 @@ bool fMNtier2()
 //
 int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
 {
+    LogPrintf("GetProofOfWorkReward: Setting base values \n");
     int64_t nSubsidy = 83 * COIN;
-
-    if(pindexBest->GetBlockTime() > 1596024000) {
+    if(pindexBest->GetBlockTime() > 1596024000 && pindexBest->GetBlockTime() < nPaymentUpdate_4) { // That way, previous blocks of info are still valid
             nSubsidy = nBlockStandardReward;
+    }if(pindexBest->GetBlockTime() > nPaymentUpdate_4 - 1){
+            nSubsidy = ((nBlockStandardPoWReward >> (nHeight / 500000)) + (nBaseFees * COIN)); // Defined in mining.h, halving function
     }
 
-    if(fMNtier2()) {
-        LogPrintf("GetProofOfWorkReward : Tier 2 rewards was selected\n");
+    LogPrintf("GetProofOfWorkReward: success! base values set \n");
+    if(fMNtier2()) {// Temp patch to omit this until further testing is done
+        //LogPrintf("GetProofOfWorkReward : Tier 2 rewards was selected\n");
         if(pindexBest->GetBlockTime() > MASTERNODE_TIER_2_START) {
-            LogPrintf("GetProofOfWorkReward : Tier 2 rewards was set\n");
-            nSubsidy += 118 * COIN;
+            //LogPrintf("GetProofOfWorkReward : Tier 2 rewards was set\n");
+            if(pindexBest->GetBlockTime() < nPaymentUpdate_4){
+                //nSubsidy += 118 * COIN;
+            }
+            if(pindexBest->GetBlockTime() >= nPaymentUpdate_4){
+                //nSubsidy += 129.8 * COIN; // added on 11.8 for Tier 2 DevOps rewards
+            }
         }
     }
+    LogPrintf("GetProofOfWorkReward: success! tier2 checked \n");
 
+    //ignore this, it's irrelevant
     if(pindexBest->GetBlockTime() < 1596304801) {
       nSubsidy += 160 * COIN;
     }
 
+    // premine Funciton
     if(nHeight > nReservePhaseStart) {
         if(pindexBest->nMoneySupply < (nBlockRewardReserve * 100)) {
             nSubsidy = nBlockRewardReserve;
@@ -550,10 +568,8 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
         return nFees;
     }
 
-    // Halving
-    nSubsidy >>= (nHeight / 500000); // Halves every 500,000 blocks
-
     LogPrint("creation", "GetProofOfWorkReward() : create=%s nSubsidy=%d\n", FormatMoney(nSubsidy), nSubsidy);
+    // Input Code here to generate coins for network tests
     return nSubsidy + nFees;
 }
 
@@ -573,7 +589,7 @@ int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, i
         nSubsidy = (4.98 * COIN);
     }
 
-    if(pindexBest->GetBlockTime() > 1596024000) {
+    if(pindexBest->GetBlockTime() > 1596024000 && pindexBest->GetBlockTime() < nPaymentUpdate_4) {
       nSubsidy = (58.25 * COIN); // PoS Staking - pindexPrev is info from the last block, and -> means to get specific info from that block. Getblocktime is the epoch time of that block.
     if(pindexPrev->GetBlockTime() > 1596585600 && pindexPrev->GetBlockTime() < 1609804800){
       nSubsidy = (58.875 * COIN); // (ratio * nBlockStandardReward) + 42 + (.1 * nBlockStandardReward)
@@ -585,17 +601,36 @@ int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, i
       nSubsidy = (62 * COIN);
     }
     }
+    // Latest one, close this window if we need to change rewards
+    if(pindexBest->GetBlockTime() > nPaymentUpdate_4){
+        nSubsidy = (58.25 * COIN); // Might leave this alone as I believe we already past this epoch
+      if(pindexPrev->GetBlockTime() > 1596585600 && pindexPrev->GetBlockTime() < 1609804800){
+        nSubsidy = (58.875 * COIN); // (ratio * nBlockStandardReward) + 42 + (.1 * nBlockStandardReward)
+      }else if(pindexPrev->GetBlockTime() > 1609804800 && pindexPrev->GetBlockTime() < 1625443200){
+        nSubsidy = ((nBasePoSReward2 + nBaseFees) * COIN); // PoS Reward 2; 60.67
+      }else if(pindexPrev->GetBlockTime() > 1625443200 && pindexPrev->GetBlockTime() < 1641340800){
+        nSubsidy = ((nBasePoSReward3 + nBaseFees) * COIN); // PoS Reward 3; 61.5
+      }else if(pindexPrev->GetBlockTime() > 1641340800){
+        nSubsidy = ((nBasePoSReward4 + nBaseFees) * COIN); // PoS Reward 4; 62.33
+      }
+    }
 
+    // irrelevant, here so previous blocks don't get invalidated
     if(pindexBest->GetBlockTime() < 1596304801) {
       nSubsidy += 20.8 * COIN;
     }
 
     if(fMNtier2()) {
         if(pindexBest->GetBlockTime() > MASTERNODE_TIER_2_START) {
-            nSubsidy += 118 * COIN;
+            if(pindexBest->GetBlockTime() < nPaymentUpdate_4){
+                //nSubsidy += 118 * COIN;
+            }
+            if(pindexBest->GetBlockTime() >= nPaymentUpdate_4){
+            //nSubsidy += 129.8 * COIN; // added on 11.8 for Tier 2 DevOps rewards
+            }
         }
     }
-
+    // Premine funciton
     if(pindexPrev->nHeight+1 > nReservePhaseStart) { // If, all 100 blocks of the premine isn't done, then next blocks have premine value
         if(pindexBest->nMoneySupply < (nBlockRewardReserve * 100)) {
             nSubsidy = nBlockRewardReserve;
@@ -624,9 +659,9 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
         ret2 = 42 * COIN; // 42 CCASH
 
         if(fMNtier2()) {
-            if(pindexBest->GetBlockTime() > MASTERNODE_TIER_2_START) {
-                ret2 += 118 * COIN;
-            }
+            //if(pindexBest->GetBlockTime() > MASTERNODE_TIER_2_START) {
+            //    ret2 += 118 * COIN;
+            //}
         }
     }
 
@@ -639,13 +674,18 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
 int64_t GetDevOpsPayment(int nHeight, int64_t blockValue)
 {
     int64_t ret2 = 0;
-    if(pindexBest->GetBlockTime() > 1596024000) {
+    if(pindexBest->GetBlockTime() > 1596024000 && pindexBest->GetBlockTime() < nPaymentUpdate_4) {
     ret2 = 12.5 * COIN; // 12.5 CCASH per block = 10% of blocks.
     }
 
     if(pindexBest->GetBlockTime() < 1596304801) {
       ret2 += 16 * COIN;
     }
-
+    //After fork time, it'll take into account tier 2 devops
+    if(pindexBest->GetBlockTime() > nPaymentUpdate_4){
+        if(pindexBest->nHeight > 999999) {// Set your fork height here
+            ret2 += 11.8;
+        }
+    }
     return ret2;
 }

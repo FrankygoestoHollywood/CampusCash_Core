@@ -156,6 +156,9 @@ extern bool fMnT2;
 extern CScript cMNpayee;
 extern int64_t nMNpayBlockHeight;
 extern bool fMnWnr;
+//Logic for lock/unlock GUI icon
+//does not affect daemon operation
+extern bool settingsStatus;
 //will sync until this block height. default -1 which represents disabled
 extern int maxBlockHeight;
 

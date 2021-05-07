@@ -4,7 +4,7 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About CampusCash</source>
-        <translation>O CampusCashe</translation>
+        <translation>O CampusCash</translation>
     </message>
     <message>
         <location line="+39"/>
@@ -15,10 +15,10 @@
         <location line="+41"/>
         <source>Copyright © 2009-2014 The Bitcoin developers
 Copyright © 2012-2014 The NovaCoin developers
-Copyright © 2014 The CampusCash developers</source>
+Copyright © 2020-2021 The CampusCash developers</source>
         <translation>Copyright © 2009-2014 The Bitcoin developers
 Copyright © 2012-2014 The NovaCoin developers
-Copyright © 2014 The CampusCash developers</translation>
+Copyright © 2020-2021 The CampusCash developers</translation>
     </message>
     <message>
         <location line="+15"/>
