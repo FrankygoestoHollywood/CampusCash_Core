@@ -85,7 +85,6 @@ void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDa
         }
 
         mapSeenMasternodeVotes.insert(make_pair(hash, winner));
-
     }
 }
 
@@ -104,6 +103,7 @@ bool CMasternodePayments::CheckSignature(CMasternodePaymentWinner& winner)
 
     return true;
 }
+
 
 bool CMasternodePayments::Sign(CMasternodePaymentWinner& winner)
 {
@@ -135,6 +135,7 @@ bool CMasternodePayments::Sign(CMasternodePaymentWinner& winner)
     return true;
 }
 
+
 uint64_t CMasternodePayments::CalculateScore(uint256 blockHash, CTxIn& vin)
 {
     uint256 n1 = blockHash;
@@ -142,66 +143,40 @@ uint64_t CMasternodePayments::CalculateScore(uint256 blockHash, CTxIn& vin)
     uint256 n3 = Hash(BEGIN(vin.prevout.hash), END(vin.prevout.hash));
     uint256 n4 = n3 > n2 ? (n3 - n2) : (n2 - n3);
 
-    //printf(" -- CMasternodePayments CalculateScore() n2 = %d \n", n2.Get64());
-    //printf(" -- CMasternodePayments CalculateScore() n3 = %d \n", n3.Get64());
-    //printf(" -- CMasternodePayments CalculateScore() n4 = %d \n", n4.Get64());
-
     return n4.Get64();
 }
 
+
 bool CMasternodePayments::GetWinningMasternode(int nBlockHeight, CTxIn& vin)
 {
-    BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning){
-        if(winner.nBlockHeight == nBlockHeight) {
-            vin = winner.vin;
-            return true;
-        }
+    if(mWinning.count(nBlockHeight) != 0)
+    {
+        vin = mWinning[nBlockHeight].vin;
+        return true;
     }
 
     return false;
-
-    // Ensure exclusion of pointless looping
-    //
-    // TODO: Move this to block params after verification
- /*   if(nMNpayBlockHeight == nBlockHeight){
-        if(fMnWnr){
-            return true;
-        } else {
-            return false;
-        }
-    }
-    // Set loop logging
-    nMNpayBlockHeight = nBlockHeight;
-    fMnWnr = false;
-    // If initial sync or we can't find a masternode in our list
-    if(IsInitialBlockDownload() || !ProcessBlock(nBlockHeight)){
-        // Return false (for sanity, we have no masternode to pay)
-        LogPrintf(" GetWinningMasternode()) - ProcessBlock failed (OR) Still syncing... \n");
-        return false;
-    }
-    // Set masternode winner to pay
-    BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning){
-        vin = winner.vin;
-    }
-    // Check Tier level of MasterNode winner
-    fMnT2 = mnEngineSigner.IsVinTier2(vin);
-    // Return true if previous checks pass
-    return true;*/
 }
+
 
 bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerIn)
 {
-    BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning)
+    if(mWinning.count(winnerIn.nBlockHeight) != 0)
     {
-        if(winner.nBlockHeight == winnerIn.nBlockHeight) 
+        if(mWinning[winnerIn.nBlockHeight].vin != winnerIn.vin)
         {
+            mWinning[winnerIn.nBlockHeight] = winnerIn;
             return true;
         }
-    }
 
-    vWinning.push_back(winnerIn);
+        return false;
+    }
+    
+    mWinning[winnerIn.nBlockHeight] = winnerIn;
+
     return true;
 }
+
 
 void CMasternodePayments::CleanPaymentList()
 {
@@ -209,46 +184,19 @@ void CMasternodePayments::CleanPaymentList()
 
     if(pindexBest == NULL) return;
 
-    int nLimit = std::max(((int)mnodeman.size())*((int)1.25), 1000);
+    int nLimit = std::max((int)((int)mnodeman.size()*1.25), 1000);
 
-    vector<CMasternodePaymentWinner>::iterator it;
-    for(it=vWinning.begin();it<vWinning.end();it++){
-        if(pindexBest->nHeight - (*it).nBlockHeight > nLimit){
-            if(fDebug) LogPrintf("CMasternodePayments::CleanPaymentList - Removing old Masternode payment - block %d\n", (*it).nBlockHeight);
-            vWinning.erase(it);
-            break;
-        }
-    }
+    std::map<int,CMasternodePaymentWinner>::iterator it = mWinning.lower_bound(pindexBest->nHeight - nLimit);
+    
+    mWinning.erase(mWinning.begin(),it);
 }
 
-bool CMasternodePayments::NodeisCapable()
-{
-    bool fNodeisCapable;
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        if(pnode->nVersion >= MIN_MASTERNODE_BSC_RELAY) {
-            LogPrintf(" NodeisCapable() - Capable peers found (Masternode relay) \n");
-            fNodeisCapable = true;
-            break;
-        } else {
-            LogPrintf(" NodeisCapable() - Cannot relay with peers (Masternode relay) \n");
-            fNodeisCapable = false;
-            break;
-        }
-    }
-    return fNodeisCapable;
-}
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
     LOCK(cs_masternodepayments);
 
     if(IsInitialBlockDownload()) return false;
-    if(nBlockHeight <= nLastBlockHeight)
-    {
-        LogPrintf("Masternode-Payments::ProcessBlock - FAILED - height too low - current = %d VS last = %d\n", nBlockHeight, nLastBlockHeight);
-        return false;
-    }
 
     CMasternodePaymentWinner newWinner;
 
@@ -272,7 +220,6 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
  
     if(AddWinningMasternode(newWinner))
     {
-        nLastBlockHeight = nBlockHeight;
         CTxDestination address1;
         ExtractDestination(newWinner.payee, address1);
         CCampusCashAddress address2(address1);
@@ -288,31 +235,31 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 void CMasternodePayments::Relay(CMasternodePaymentWinner& winner)
 {
     CInv inv(MSG_MASTERNODE_WINNER, winner.GetHash());
-
-    LogPrintf("Relayed winning masternode. \n");
-
     vector<CInv> vInv;
     vInv.push_back(inv);
+
     LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        if(NodeisCapable()) { // Only send to capable nodes
-            // TODO: Fix Dash's old implementation, this is just sad.
-            // First figure out why RelayMasternode bans MNs and then get the
-            // Relay properly functional. None of this half ass shit which seems
-            // to be the damn standard.
-            //
-            //pnode->PushMessage("inv", vInv);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+    {
+        if(pnode->nVersion >= MIN_MASTERNODE_BSC_RELAY) 
+        { 
+            pnode->PushMessage("inv", vInv);
         }
     }
 }
+
 
 void CMasternodePayments::Sync(CNode* node)
 {
     LOCK(cs_masternodepayments);
 
-    BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning)
-        if(winner.nBlockHeight >= pindexBest->nHeight-10 && winner.nBlockHeight <= pindexBest->nHeight + 20)
-            node->PushMessage("mnw", winner);
+    std::map<int,CMasternodePaymentWinner>::iterator it = mWinning.lower_bound(pindexBest->nHeight - 10);
+
+    while(it != mWinning.end() && it->first <= pindexBest->nHeight + 20)
+    {
+        node->PushMessage("mnw", it->second);
+        it++;
+    }
 }
 
 

@@ -488,10 +488,12 @@ bool fMNtier2()
 
     CTxIn vin;
  
-    if(masternodePayments.GetWinningMasternode(pindexBest->nHeight+1, vin)){
-        return fMnT2;
+    if(masternodePayments.GetWinningMasternode(pindexBest->nHeight+1, vin))
+    {
+        return mnEngineSigner.IsVinTier2(vin);;
     } 
-    else {
+    else 
+    {
         LogPrintf("MasterNode Tier Payment Toggle : WARNING : Could not find Masternode winner!\n");
     }
 
