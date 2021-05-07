@@ -483,21 +483,6 @@ bool fMNtier2()
 {
     // Disabling fMNtier2 while tier2 doesn't work
     return false;
-    
-    if(IsInitialBlockDownload()) return false;
-
-    CTxIn vin;
- 
-    if(masternodePayments.GetWinningMasternode(pindexBest->nHeight+1, vin))
-    {
-        return mnEngineSigner.IsVinTier2(vin);;
-    } 
-    else 
-    {
-        LogPrintf("MasterNode Tier Payment Toggle : WARNING : Could not find Masternode winner!\n");
-    }
-
-    return false;
 }
 
 //
@@ -532,10 +517,6 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
 
     // Standard reward
     nSubsidy = (nBlockStandardPoWReward >> (nHeight / 500000)) + nBaseFees;
-   
-    if(fMNtier2()) {
-        nSubsidy += 118 * COIN;
-    }
 
     return nSubsidy + nFees;
 }
@@ -577,10 +558,6 @@ int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, i
     else if(pindexPrev->nHeight <= 1000000) nSubsidy = nBasePoSReward3 + nBaseFees;
     else nSubsidy = nBasePoSReward4 + nBaseFees;
 
-    if(fMNtier2()) {
-        nSubsidy += 118 * COIN;
-    }
-
     return nSubsidy + nFees;
 }
 
@@ -599,12 +576,32 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
     }
     
     // Standard reward
-    ret2 = 42 * COIN;
-        
-    if(fMNtier2()) {
-        ret2 += 118 * COIN;
-    }
+    ret2 = nBaseMasternodeFees;
 
+    return ret2;
+}
+
+//
+// Masternode Tier2 bonus reward
+//
+int64_t GetTier2MasternodeBonusPayment(CTxIn& vin)
+{
+    int64_t ret2 = 0;
+
+    if(IsInitialBlockDownload()) return 0;
+
+    // Old reward structures to allow sync from 0
+    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    {
+        return 0;
+    }
+    
+    // Standard reward
+    if(mnEngineSigner.IsVinTier2(vin))
+    {
+        ret2 = nTier2MasternodeBonusFees;
+    }
+    
     return ret2;
 }
 
@@ -624,7 +621,7 @@ int64_t GetDevOpsPayment(int nHeight, int64_t blockValue)
     }
     
     // Standard reward
-    ret2 = 28.5 * COIN;
+    ret2 = nBaseDevOpsFees;
 
     return ret2;
 }

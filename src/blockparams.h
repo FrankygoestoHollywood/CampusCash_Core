@@ -44,6 +44,7 @@ bool fMNtier2();
 int64_t GetProofOfWorkReward(int nHeight, int64_t nFees);
 int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, int64_t nFees);
 int64_t GetMasternodePayment(int nHeight, int64_t blockValue);
+int64_t GetTier2MasternodeBonusPayment(CTxIn& vin);
 int64_t GetDevOpsPayment(int nHeight, int64_t blockValue);
 
 #endif // BITCOIN_BLOCKPARAMS_H

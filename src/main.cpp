@@ -1989,13 +1989,19 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
     if (IsProofOfWork())
     {
-        int64_t nReward = GetProofOfWorkReward(pindex->nHeight, nFees);
- 
-         // Check coinbase reward
-        if (vtx[0].GetValueOut() > nReward){
-            // Allow tier 2 payments in sync
-            if(!(IsInitialBlockDownload() && pindex->pprev->GetBlockTime() > nRewardSystemUpdate && vtx[0].GetValueOut() == nReward + (118 * COIN))){
-                return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)", vtx[0].GetValueOut(), nReward));
+        int64_t nCalculatedReward = GetProofOfWorkReward(pindex->nHeight, nFees);
+
+        // Old reward structures to allow sync from 0
+        if(pindex->pprev->GetBlockTime() <= nRewardSystemUpdate)
+        {
+            if (vtx[0].GetValueOut() > nCalculatedReward){
+                return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)", vtx[0].GetValueOut(), nCalculatedReward));
+            }
+        }
+        else
+        {
+            if (vtx[0].GetValueOut() != nCalculatedReward && vtx[0].GetValueOut() != nCalculatedReward + nTier2MasternodeBonusFees){
+                return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)", vtx[0].GetValueOut(), nCalculatedReward));
             }
         }
     }
@@ -2008,11 +2014,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
         int64_t nCalculatedStakeReward = GetProofOfStakeReward(pindex->pprev, nCoinAge, nFees);
 
-        if (nStakeReward > nCalculatedStakeReward){
-            // Allow tier 2 payments in sync
-            if(!(IsInitialBlockDownload() && nStakeReward == nCalculatedStakeReward + (118 * COIN))){
-                return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
-            }
+        if (nStakeReward != nCalculatedStakeReward && nStakeReward != nCalculatedStakeReward + nTier2MasternodeBonusFees){
+            return DoS(50, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
         }
     }
 
@@ -2522,8 +2525,16 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
         if(fDebug) { LogPrintf("CheckBlock() : skipping transaction locking checks\n"); }
     }
 
+    
+    
     // ----------- masternode / devops - payments -----------
 
+    if(pindexBest->GetBlockTime() > nRewardSystemUpdate)
+    {
+
+    }
+
+/*
     bool MasternodePayments = false;
     bool fIsInitialDownload = IsInitialBlockDownload();
 
@@ -2816,6 +2827,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
             return DoS(100, error("CheckBlock() : PoW/PoS invalid payments in current block\n"));
         }
     }
+
+    */
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, vtx)
