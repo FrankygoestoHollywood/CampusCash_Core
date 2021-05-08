@@ -683,9 +683,7 @@ int64_t GetDevOpsPayment(int nHeight, int64_t blockValue)
     }
     //After fork time, it'll take into account tier 2 devops
     if(pindexBest->GetBlockTime() > nPaymentUpdate_4){
-        if(pindexBest->nHeight > 999999) {// Set your fork height here
             ret2 += 11.8;
-        }
     }
     return ret2;
 }
