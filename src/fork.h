@@ -17,7 +17,7 @@ static const int64_t nPaymentUpdate_2 = 1562094000;//TODO: Clean this up
 /** Masternode/Devops Payment Update 3 **/
 static const int64_t nPaymentUpdate_3 = 1562281200;//TODO: Clean this up
 /** PoW / PoS / Block Total update 1, 4th update to overall payment structure*/
-static const int64_t nPaymentUpdate_4 = 1620466701;//Sunday, May 9, 2021 5:34:50 AM 1620538490
+static const int64_t nPaymentUpdate_4 = 1620532800;//Sunday, May 9, 2021 4:00:00 AM 1620532800 GMT
 /** PoW enabled again **/
 static const int64_t nPoWToggle = 1596844820; // Saturday, August 8, 2020 12:00:20 AM (GMT)
 /** Velocity toggle block */
