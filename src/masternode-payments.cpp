@@ -185,11 +185,10 @@ void CMasternodePayments::CleanPaymentList()
     if(pindexBest == NULL) return;
 
     int nLimit = std::max((int)((int)mnodeman.size()*1.25), 1000);
-
-    for(std::map<int,CMasternodePaymentWinner>::iterator it = mWinning.begin(); it->first < pindexBest->nHeight - nLimit; it++)
-    {
-        mWinning.erase(it);
-    }
+    
+    std::map<int,CMasternodePaymentWinner>::iterator it = mWinning.lower_bound(pindexBest->nHeight - nLimit);
+    
+    mWinning.erase(mWinning.begin(),it);
 }
 
 
