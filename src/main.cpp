@@ -2021,7 +2021,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
     if(!IsInitialBlockDownload())
     {
-        if(IsProofOfStake)
+        if(IsProofOfStake())
         {
             int size = vtx[1].vout.size();
             CTxDestination address1;
@@ -2031,7 +2031,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
             ExtractDestination(vtx[1].vout[size-2].scriptPubKey, address2);
             CCampusCashAddress masternodeAddress(address2);
 
-            LogPrintf("ConnectBlock() POS : height - %d\n", nBlockHeight);
+            LogPrintf("ConnectBlock() POS : height - %d\n", pindex->nHeight);
             LogPrintf("ConnectBlock() POS : masternode payment : address - %s  value - %d\n", masternodeAddress.ToString().c_str(), vtx[1].vout[size-2].nValue);
             LogPrintf("ConnectBlock() POS : devops payment : address - %s  value - %d\n", devopAddress.ToString().c_str(), vtx[1].vout[size-1].nValue);
         }
