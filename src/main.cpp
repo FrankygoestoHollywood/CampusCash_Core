@@ -2019,6 +2019,24 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         }
     }
 
+    if(!IsInitialBlockDownload())
+    {
+        if(IsProofOfStake)
+        {
+            int size = vtx[1].vout.size();
+            CTxDestination address1;
+            ExtractDestination(vtx[1].vout[size-1].scriptPubKey, address1);
+            CCampusCashAddress devopAddress(address1);
+            CTxDestination address2;
+            ExtractDestination(vtx[1].vout[size-2].scriptPubKey, address2);
+            CCampusCashAddress masternodeAddress(address2);
+
+            LogPrintf("ConnectBlock() POS : height - %d\n", nBlockHeight);
+            LogPrintf("ConnectBlock() POS : masternode payment : address - %s  value - %d\n", masternodeAddress.ToString().c_str(), vtx[1].vout[size-2].nValue);
+            LogPrintf("ConnectBlock() POS : devops payment : address - %s  value - %d\n", devopAddress.ToString().c_str(), vtx[1].vout[size-1].nValue);
+        }
+    }
+
     // ppcoin: track money supply and mint amount info
     pindex->nMint = nValueOut - nValueIn + nFees;
     pindex->nMoneySupply = (pindex->pprev? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
@@ -2528,11 +2546,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     
     
     // ----------- masternode / devops - payments -----------
-
-    if(pindexBest->GetBlockTime() > nRewardSystemUpdate)
-    {
-
-    }
 
 /*
     bool MasternodePayments = false;
