@@ -49,7 +49,7 @@ Value getsubsidy(const Array& params, bool fHelp)
             "getsubsidy [nTarget]\n"
             "Returns proof-of-work subsidy value for the specified value of target.");
 
-    return (int64_t)GetProofOfStakeReward(pindexBest->pprev, 0, 0);
+    return (int64_t)GetProofOfStakeReward(0);
 }
 
 Value getstakesubsidy(const Array& params, bool fHelp)
@@ -70,13 +70,8 @@ Value getstakesubsidy(const Array& params, bool fHelp)
     catch (std::exception &e) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
-
-    uint64_t nCoinAge;
-    CTxDB txdb("r");
-    if (!tx.GetCoinAge(txdb, pindexBest, nCoinAge))
-        throw JSONRPCError(RPC_MISC_ERROR, "GetCoinAge failed");
-
-    return (uint64_t)GetProofOfStakeReward(pindexBest->pprev, nCoinAge, 0);
+    
+    return (uint64_t)GetProofOfStakeReward(0);
 }
 
 Value getmininginfo(const Array& params, bool fHelp)
@@ -91,7 +86,7 @@ Value getmininginfo(const Array& params, bool fHelp)
         nWeight = pwalletMain->GetStakeWeight();
 
     // Define block rewards
-    int64_t nRewardPoW = (uint64_t)GetProofOfWorkReward(nBestHeight, 0);
+    int64_t nRewardPoW = (uint64_t)GetProofOfWorkReward(0);
 
     Object obj, diff, weight;
     obj.push_back(Pair("blocks",        (int)nBestHeight));
@@ -686,8 +681,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
         if (pindexBest->GetBlockTime() > nPaymentUpdate_1) // Monday, May 20, 2019 12:00:00 AM
         {
             // Set Masternode / DevOps payments
-            int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, networkPayment);
-            int64_t devopsPayment = GetDevOpsPayment(pindexPrev->nHeight+1, networkPayment);
+            int64_t masternodePayment = GetMasternodePayment();
+            int64_t devopsPayment = GetDevOpsPayment();
             std::string devpayee2 = "CcABDmWkcSZPw8rMtoobShVFuudhf1svZu"; // CVGQAbKX5MvmsSN4x1GeCNqNsxzkPJuWEW
 
             if (pindexBest->GetBlockTime() < nPaymentUpdate_2) {

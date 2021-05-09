@@ -3028,19 +3028,14 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             vwtxPrev.push_back(pcoin.first);
         }
     }
-
-    uint64_t nCoinAge;
-    CTxDB txdb("r");
-    if (!txNew.GetCoinAge(txdb, pindexPrev, nCoinAge))
-        return error("CreateCoinStake : failed to calculate coin age");
-
-    nCredit += GetProofOfStakeReward(pindexPrev, nCoinAge, nFees);
+    
+    nCredit += GetProofOfStakeReward(nFees);
 
     // Set TX values
     CScript cDevopsPayee = GetScriptForDestination(CBitcoinAddress(Params().DevOpsAddress()).Get());
     CScript cMasternodePayee;
-    int64_t nDevopsPayment = GetDevOpsPayment(pindexPrev->nHeight+1, 0);
-    int64_t nMasternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, 0);
+    int64_t nDevopsPayment = GetDevOpsPayment();
+    int64_t nMasternodePayment = GetMasternodePayment();
 
     CTxIn vin;
     CScript payee;

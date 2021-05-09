@@ -117,10 +117,6 @@ string strRollbackToBlock = "";
 int64_t nMasterNodeChecksDelayBaseTime = 0;
 //MasterNode peer IP advanced relay system toggle
 bool fMnAdvRelay = false;
-//MasterNode tier 2
-bool fMnT2 = false;
-bool fMnWnr = false;
-int64_t nMNpayBlockHeight = 0;
 //Max Blockheight Value
 int maxBlockHeight = -1;
 

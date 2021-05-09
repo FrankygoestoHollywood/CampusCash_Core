@@ -476,24 +476,16 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 // Idle Duration        : 5 Intervals (no adjustment)
 //
 
-//
-// Masternode Tier 2 Payout Toggle
-//
-bool fMNtier2()
-{
-    // Disabling fMNtier2 while tier2 doesn't work
-    return false;
-}
 
 //
 // PoW coin base reward
 //
-int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
+int64_t GetProofOfWorkReward(int64_t nFees)
 {
      int64_t nSubsidy = 0;
 
     // Premine
-    if(nHeight > nReservePhaseStart)
+    if(pindexBest->nHeight >= nReservePhaseStart)
     {
         if(pindexBest->nMoneySupply < (nBlockRewardReserve * 100)) {
             return nBlockRewardReserve;
@@ -501,10 +493,8 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
     }
  
     // HardCap
-    if(pindexBest->nMoneySupply > MAX_SINGLE_TX){
-        return nFees;
-    }
-
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return nFees;
+    
     // Old reward structures to allow sync from 0, harcoded timestamps and rewards
     if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
     {
@@ -516,7 +506,7 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
     }
 
     // Standard reward
-    nSubsidy = (nBlockStandardPoWReward >> (nHeight / 500000)) + nBaseFees;
+    nSubsidy = (nBlockStandardPoWReward >> (pindexBest->nHeight / 500000)) + nBaseFees;
 
     return nSubsidy + nFees;
 }
@@ -524,38 +514,36 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
 //
 // PoS coin base reward
 //
-int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, int64_t nFees)
+int64_t GetProofOfStakeReward(int64_t nFees)
 {
     int64_t nSubsidy = 0;
 
     // Premine
-    if(pindexPrev->nHeight+1 > nReservePhaseStart)
+    if(pindexBest->nHeight >= nReservePhaseStart)
     {
-        if(pindexPrev->nMoneySupply < (nBlockRewardReserve * 100)) {
+        if(pindexBest->nMoneySupply < (nBlockRewardReserve * 100)) {
             return nBlockRewardReserve;
         }
     }
  
     // HardCap
-    if(pindexPrev->nMoneySupply > MAX_SINGLE_TX){
-        return nFees;
-    }
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return nFees;
 
     // Old reward structures to allow sync from 0, harcoded timestamps and rewards
-    if(pindexPrev->GetBlockTime() <= nRewardSystemUpdate)
+    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
     {
-        if(pindexPrev->GetBlockTime() <= 1596024000) nSubsidy = 2.905 * COIN;
-        else if(pindexPrev->GetBlockTime() <= 1596304800) nSubsidy = 79.05 * COIN;
-        else if(pindexPrev->GetBlockTime() <= 1596585600) nSubsidy = 58.25 * COIN;
-        else if(pindexPrev->GetBlockTime() <= 1609804800) nSubsidy = 58.875 * COIN;
+        if(pindexBest->GetBlockTime() <= 1596024000) nSubsidy = 2.905 * COIN;
+        else if(pindexBest->GetBlockTime() <= 1596304800) nSubsidy = 79.05 * COIN;
+        else if(pindexBest->GetBlockTime() <= 1596585600) nSubsidy = 58.25 * COIN;
+        else if(pindexBest->GetBlockTime() <= 1609804800) nSubsidy = 58.875 * COIN;
         else nSubsidy = 59.5 * COIN;
 
         return nSubsidy + nFees;
     }
 
     // Standard reward
-    if(pindexPrev->nHeight <= 500000) nSubsidy = nBasePoSReward2 + nBaseFees;
-    else if(pindexPrev->nHeight <= 1000000) nSubsidy = nBasePoSReward3 + nBaseFees;
+    if(pindexBest->nHeight <= 500000) nSubsidy = nBasePoSReward2 + nBaseFees;
+    else if(pindexBest->nHeight <= 1000000) nSubsidy = nBasePoSReward3 + nBaseFees;
     else nSubsidy = nBasePoSReward4 + nBaseFees;
 
     return nSubsidy + nFees;
@@ -564,14 +552,12 @@ int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, i
 //
 // Masternode coin base reward
 //
-int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
+int64_t GetMasternodePayment()
 {
     int64_t ret2 = 0;
 
     // HardCap
-    if(pindexBest->nMoneySupply > MAX_SINGLE_TX){
-        return 0;
-    }
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return 0;
 
     // Old reward structures to allow sync from 0, harcoded timestamps and rewards
     if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
@@ -596,9 +582,7 @@ int64_t GetTier2MasternodeBonusPayment(CTxIn& vin)
     if(IsInitialBlockDownload()) return 0;
 
     // HardCap
-    if(pindexBest->nMoneySupply > MAX_SINGLE_TX){
-        return 0;
-    }
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return 0;
     
     // Old reward structures to allow sync from 0
     if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
@@ -618,15 +602,13 @@ int64_t GetTier2MasternodeBonusPayment(CTxIn& vin)
 //
 // DevOps coin base reward
 //
-int64_t GetDevOpsPayment(int nHeight, int64_t blockValue)
+int64_t GetDevOpsPayment()
 {
     int64_t ret2 = 0;
 
     // HardCap
-    if(pindexBest->nMoneySupply > MAX_SINGLE_TX){
-        return 0;
-    }
-
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return 0;
+    
     // Old reward structures to allow sync from 0, harcoded timestamps and rewards
     if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
     {
