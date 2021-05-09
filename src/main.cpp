@@ -2016,7 +2016,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
     if(!IsInitialBlockDownload())
     {
-        if(IsProofOfStake())
+        if(IsProofOfStake() && vtx[1].vout.size() >= 2)
         {
             int size = vtx[1].vout.size();
             CTxDestination address1;
