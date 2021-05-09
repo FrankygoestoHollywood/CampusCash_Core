@@ -568,6 +568,11 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
 {
     int64_t ret2 = 0;
 
+    // HardCap
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX){
+        return 0;
+    }
+
     // Old reward structures to allow sync from 0, harcoded timestamps and rewards
     if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
     {
@@ -590,6 +595,11 @@ int64_t GetTier2MasternodeBonusPayment(CTxIn& vin)
 
     if(IsInitialBlockDownload()) return 0;
 
+    // HardCap
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX){
+        return 0;
+    }
+    
     // Old reward structures to allow sync from 0
     if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
     {
@@ -611,6 +621,11 @@ int64_t GetTier2MasternodeBonusPayment(CTxIn& vin)
 int64_t GetDevOpsPayment(int nHeight, int64_t blockValue)
 {
     int64_t ret2 = 0;
+
+    // HardCap
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX){
+        return 0;
+    }
 
     // Old reward structures to allow sync from 0, harcoded timestamps and rewards
     if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)

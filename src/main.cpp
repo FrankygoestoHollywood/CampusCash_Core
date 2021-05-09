@@ -3003,7 +3003,8 @@ bool CBlock::AcceptBlock()
 
         if(!fImporting && !fReindex && pindexBest->nHeight > nBlockEstimate)
         {
-            if(masternodePayments.GetWinningMasternode(pindexBest->nHeight, vin))
+            CScript payee;
+            if(masternodePayments.GetWinningMasternode(pindexBest->nHeight, vin, payee))
             {
                CMasternode* pmn = mnodeman.Find(vin);
                 if(pmn != NULL) {

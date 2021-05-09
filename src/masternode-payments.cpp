@@ -24,6 +24,7 @@ int CMasternodePayments::GetMinMasternodePaymentsProto() {
             : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
 }
 
+
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(!mnEnginePool.IsBlockchainSynced()) return;
@@ -147,11 +148,12 @@ uint64_t CMasternodePayments::CalculateScore(uint256 blockHash, CTxIn& vin)
 }
 
 
-bool CMasternodePayments::GetWinningMasternode(int nBlockHeight, CTxIn& vin)
+bool CMasternodePayments::GetWinningMasternode(int nBlockHeight, CTxIn& vin, CScript& payee)
 {
     if(mWinning.count(nBlockHeight) != 0)
     {
         vin = mWinning[nBlockHeight].vin;
+        payee = mWinning[nBlockHeight].payee;
         return true;
     }
 
@@ -200,9 +202,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     CMasternodePaymentWinner newWinner;
 
-    CBitcoinAddress cDevopsPayee;
-    cDevopsPayee = CBitcoinAddress("Ce1XyENjUHHPBt8mxy2LupkH2PnequevMM");// devops address
-    cMNpayee = GetScriptForDestination(cDevopsPayee.Get());
+    CScript cDevopsPayee = GetScriptForDestination(CBitcoinAddress(Params().DevOpsAddress()).Get());
+    cMNpayee = cDevopsPayee;
 
     CMasternode *pmn = mnodeman.GetCurrentMasterNode(1);
     if(pmn == NULL) 
@@ -216,7 +217,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     newWinner.vin = pmn->vin;
     newWinner.payee = GetScriptForDestination(pmn->pubkey.GetID());
 
-    cMNpayee = GetScriptForDestination(pmn->pubkey.GetID());
+    cMNpayee = newWinner.payee;
  
     if(AddWinningMasternode(newWinner))
     {

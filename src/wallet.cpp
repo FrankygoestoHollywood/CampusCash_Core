@@ -31,7 +31,6 @@ using namespace std;
 int64_t nTransactionFee = MIN_TX_FEE;
 int64_t nReserveBalance = 0;
 int64_t nMinimumInputValue = 0;
-int64_t nPoSageReward = 0;
 
 int64_t GetStakeCombineThreshold() { return GetArg("-stakethreshold", 1000) * COIN; }
 static int64_t GetStakeSplitThreshold() { return 2 * GetStakeCombineThreshold(); }
@@ -2895,13 +2894,6 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     txNew.vin.clear();
     txNew.vout.clear();
 
-    // OLD IMPLEMENTATION COMMNETED OUT
-    //
-    // Determine our payment script for devops
-    // CScript devopsScript;
-    // devopsScript << OP_DUP << OP_HASH160 << ParseHex(Params().DevOpsPubKey()) << OP_EQUALVERIFY << OP_CHECKSIG;
-
-    // Mark coin stake transaction
     CScript scriptEmpty;
     scriptEmpty.clear();
     txNew.vout.push_back(CTxOut(0, scriptEmpty));
@@ -3037,222 +3029,62 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         }
     }
 
-    // Calculate coin age reward
-    int64_t nReward;
-    {
-        uint64_t nCoinAge;
-        CTxDB txdb("r");
-        if (!txNew.GetCoinAge(txdb, pindexPrev, nCoinAge))
-            return error("CreateCoinStake : failed to calculate coin age");
+    uint64_t nCoinAge;
+    CTxDB txdb("r");
+    if (!txNew.GetCoinAge(txdb, pindexPrev, nCoinAge))
+        return error("CreateCoinStake : failed to calculate coin age");
 
-        nReward = GetProofOfStakeReward(pindexPrev, nCoinAge, nFees);
-        if (nReward <= 0)
-            return false;
-
-        nCredit += nReward;
-    }
+    nCredit += GetProofOfStakeReward(pindexPrev, nCoinAge, nFees);
 
     // Set TX values
-    CScript devpayee;
-    CTxIn vin;// TODO: Refactor in order to remove this like "payee" was
-    nPoSageReward = nReward;
+    CScript cDevopsPayee = GetScriptForDestination(CBitcoinAddress(Params().DevOpsAddress()).Get());
+    CScript cMasternodePayee;
+    int64_t nDevopsPayment = GetDevOpsPayment(pindexPrev->nHeight+1, 0);
+    int64_t nMasternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, 0);
 
-    // define address
-    CBitcoinAddress devopaddress;
-    if (Params().NetworkID() == CChainParams::MAIN) {
-        if(GetTime() < nPaymentUpdate_2) { devopaddress = CBitcoinAddress("Ce1XyENjUHHPBt8mxy2LupkH2PnequevMM"); } // TODO: Cdh8n1QyZo4dMj66ArEndLdf8o18qU3qvy
-        else { devopaddress = CBitcoinAddress("Ce1XyENjUHHPBt8mxy2LupkH2PnequevMM"); } // Cdh8n1QyZo4dMj66ArEndLdf8o18qU3qvy
-    } else if (Params().NetworkID() == CChainParams::TESTNET) {
-        devopaddress = CBitcoinAddress("");
-    } else if (Params().NetworkID() == CChainParams::REGTEST) {
-        devopaddress = CBitcoinAddress("");
-    }
-
-    // Masternode Payments
-    int payments = 1;
-    // start masternode payments
-    bool bMasterNodePayment = false;
-
-    if ( Params().NetworkID() == CChainParams::TESTNET ){
-        if (GetTime() > START_MASTERNODE_PAYMENTS_TESTNET ){
-            bMasterNodePayment = true;
-        }
-    }else{
-        if (GetTime() > START_MASTERNODE_PAYMENTS){
-            bMasterNodePayment = true;
-        }
-    }
-    // stop masternode payments (for testing)
-    if ( Params().NetworkID() == CChainParams::TESTNET ){
-        if (GetTime() > STOP_MASTERNODE_PAYMENTS_TESTNET ){
-            bMasterNodePayment = false;
-        }
-    }else{
-        if (GetTime() > STOP_MASTERNODE_PAYMENTS){
-            bMasterNodePayment = false;
-        }
-    }
-
-    bool hasPayment = true;
-    if(bMasterNodePayment) {
-        // Try to get frist masternode in our list
-        CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);// TODO: Refactor this, can be done away with
-        // If initial sync or we can't find a masternode in our list
-        if(winningNode){
-            //spork
-            if(masternodePayments.GetWinningMasternode(pindexPrev->nHeight+1, vin)){
-                LogPrintf("CreateCoinStake : Found relayed MasterNode winner!\n");
-            } else {
-                LogPrintf("CreateCoinStake : WARNING : Could not find relayed Masternode winner!\n");
-            }
-        } else {
-            LogPrintf("CreateCoinStake : WARNING : No MasterNodes online to pay!\n");
-        }
-    } else {
-        hasPayment = false;
-    }
-
-    if(hasPayment){
-        payments = txNew.vout.size() + 1;
-        txNew.vout.resize(payments);
-
-        txNew.vout[payments-1].scriptPubKey = cMNpayee;
-        txNew.vout[payments-1].nValue = 0;
-
-        CTxDestination address1;
-        ExtractDestination(cMNpayee, address1);
-        CCampusCashAddress address2(address1);
-
-        LogPrintf("Masternode payment to %s\n", address2.ToString().c_str());
-    }
-
-    // TODO: Clean this up, it's a mess (could be done much more cleanly)
-    //       Not an issue otherwise, merely a pet peev. Done in a rush...
-    //
-    // DevOps Payments
-    int devoppay = 1;
-    // start devops payments
-    bool bDevOpsPayment = false;
-
-    if ( Params().NetworkID() == CChainParams::TESTNET ){
-        if (GetTime() > START_DEVOPS_PAYMENTS_TESTNET ){
-            bDevOpsPayment = true;
-        }
-    }else{
-        if (GetTime() > START_DEVOPS_PAYMENTS){
-            bDevOpsPayment = true;
-        }
-    }
-    // stop devops payments (for testing)
-    if ( Params().NetworkID() == CChainParams::TESTNET ){
-        if (GetTime() > STOP_DEVOPS_PAYMENTS_TESTNET ){
-            bDevOpsPayment = false;
-        }
-    }else{
-        if (GetTime() > STOP_DEVOPS_PAYMENTS){
-            bDevOpsPayment = false;
-        }
-    }
-
-    bool hasdevopsPay = true;
-    if(bDevOpsPayment) {
-        // verify address
-        if(devopaddress.IsValid())
-        {
-            //spork
-            if(pindexBest->GetBlockTime() > 1546123500) { // ON  (Saturday, December 29, 2018 10:45 PM)
-                    devpayee = GetScriptForDestination(devopaddress.Get());
-            }
-            else {
-                hasdevopsPay = false;
-            }
-        }
-        else
-        {
-            return error("CreateCoinStake: Failed to detect dev address to pay\n");
-        }
-    }
-    else {
-        hasdevopsPay = false;
-    }
-
-    if(hasdevopsPay){
-        devoppay = txNew.vout.size() + 1;
-        txNew.vout.resize(devoppay);
-
-        txNew.vout[devoppay-1].scriptPubKey = devpayee;
-        txNew.vout[devoppay-1].nValue = 0;
-
-        CTxDestination address1;
-        ExtractDestination(devpayee, address1);
-        CCampusCashAddress address2(address1);
-
-        LogPrintf("DevOps payment to %s\n", address2.ToString().c_str());
-    }
-
-    int64_t blockValue = nCredit;
-    int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, nReward);
-    int64_t devopsPayment = GetDevOpsPayment(pindexPrev->nHeight+1, nReward); // TODO: Activate devops
-
-
-    // Set output amount
-    // Standard stake (no Masternode or DevOps payments)
-    if (!hasPayment && !hasdevopsPay)
+    CTxIn vin;
+    CScript payee;
+    if(masternodePayments.GetWinningMasternode(pindexPrev->nHeight+1, vin, payee))
+    {   
+        cMasternodePayee = payee;
+        int64_t nTier2Bonus = GetTier2MasternodeBonusPayment(vin);
+        nCredit += nTier2Bonus;
+        nMasternodePayment += nTier2Bonus;
+    } 
+    else 
     {
-        if(txNew.vout.size() == 3){ // 2 stake outputs, stake was split, no masternode payment
-            txNew.vout[1].nValue = (blockValue / 2 / CENT) * CENT;
-            txNew.vout[2].nValue = blockValue - txNew.vout[1].nValue;
-        }
-        else if(txNew.vout.size() == 2){ // only 1 stake output, was not split, no masternode payment
-            txNew.vout[1].nValue = blockValue;
-        }
+        LogPrintf("CreateCoinStake : WARNING : Could not find relayed Masternode winner!\n");
+        cMasternodePayee = cDevopsPayee;
     }
-    else if(hasPayment && !hasdevopsPay)
+
+    int prevSize = txNew.vout.size();
+
+    if(nMasternodePayment > 0)
     {
-        if(txNew.vout.size() == 4){ // 2 stake outputs, stake was split, plus a masternode payment
-            txNew.vout[payments-1].nValue = masternodePayment;
-            blockValue -= masternodePayment;
-            txNew.vout[1].nValue = (blockValue / 2 / CENT) * CENT;
-            txNew.vout[2].nValue = blockValue - txNew.vout[1].nValue;
-        }
-        else if(txNew.vout.size() == 3){ // only 1 stake output, was not split, plus a masternode payment
-            txNew.vout[payments-1].nValue = masternodePayment;
-            blockValue -= masternodePayment;
-            txNew.vout[1].nValue = blockValue;
-        }
+        txNew.vout.resize(txNew.vout.size() + 1);
+        txNew.vout[size-1].scriptPubKey = cMasternodePayee;
+        txNew.vout[size-1].nValue = nMasternodePayment; 
     }
-    else if(!hasPayment && hasdevopsPay)
+    
+    if(nDevopsPayment > 0)
     {
-        if(txNew.vout.size() == 4){ // 2 stake outputs, stake was split, plus a devops payment
-            txNew.vout[devoppay-1].nValue = devopsPayment;
-            blockValue -= devopsPayment;
-            txNew.vout[1].nValue = (blockValue / 2 / CENT) * CENT;
-            txNew.vout[2].nValue = blockValue - txNew.vout[1].nValue;
-        }
-        else if(txNew.vout.size() == 3){ // only 1 stake output, was not split, plus a devops payment
-            txNew.vout[devoppay-1].nValue = devopsPayment;
-            blockValue -= devopsPayment;
-            txNew.vout[1].nValue = blockValue;
-        }
+        txNew.vout.resize(txNew.vout.size() + 1);
+        txNew.vout[size-1].scriptPubKey = cDevopsPayee;
+        txNew.vout[size-1].nValue = nDevopsPayment;
     }
-    else if(hasPayment && hasdevopsPay)
-    {
-        if(txNew.vout.size() == 5){ // 2 stake outputs, stake was split, plus a devops AND masternode payment
-            txNew.vout[payments-1].nValue = masternodePayment;
-            blockValue -= masternodePayment;
-            txNew.vout[devoppay-1].nValue = devopsPayment;
-            blockValue -= devopsPayment;
-            txNew.vout[1].nValue = (blockValue / 2 / CENT) * CENT;
-            txNew.vout[2].nValue = blockValue - txNew.vout[1].nValue;
-        }
-        else if(txNew.vout.size() == 4){ // only 1 stake output, was not split, plus a devops AND masternode payment
-            txNew.vout[payments-1].nValue = masternodePayment;
-            blockValue -= masternodePayment;
-            txNew.vout[devoppay-1].nValue = devopsPayment;
-            blockValue -= devopsPayment;
-            txNew.vout[1].nValue = blockValue;
-        }
+    
+    int64_t blockValue = nCredit - nDevopsPayment - nMasternodePayment;
+
+    if(prevSize == 3) // 2 stake outputs, stake was split
+    { 
+        txNew.vout[1].nValue = (blockValue / 2 / CENT) * CENT;
+        txNew.vout[2].nValue = blockValue - txNew.vout[1].nValue;
     }
+    else if(prevSize == 2) // only 1 stake output, was not split
+    { 
+        txNew.vout[1].nValue = blockValue;
+    }
+    else return false;
 
     // Sign
     int nIn = 0;
