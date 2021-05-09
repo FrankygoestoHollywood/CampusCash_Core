@@ -394,16 +394,16 @@ CBlock* CreateNewBlock(CReserveKey& reservekey, bool fProofOfStake, int64_t* pFe
 
             if(nMasternodePayment > 0)
             {
-                pblock->txNew.vout.resize(pblock->txNew.vout.size() + 1);
-                pblock->txNew.vout[size-1].scriptPubKey = cMasternodePayee;
-                pblock->txNew.vout[size-1].nValue = nMasternodePayment; 
+                pblock->vtx[0].vout.resize(pblock->vtx[0].vout.size() + 1);
+                pblock->vtx[0].vout[pblock->vtx[0].vout.size()-1].scriptPubKey = cMasternodePayee;
+                pblock->vtx[0].vout[pblock->vtx[0].vout.size()-1].nValue = nMasternodePayment; 
             }
             
             if(nDevopsPayment > 0)
             {
-                pblock->txNew.vout.resize(pblock->txNew.vout.size() + 1);
-                pblock->txNew.vout[size-1].scriptPubKey = cDevopsPayee;
-                pblock->txNew.vout[size-1].nValue = nDevopsPayment;
+                pblock->vtx[0].vout.resize(pblock->vtx[0].vout.size() + 1);
+                pblock->vtx[0].vout[pblock->vtx[0].vout.size()-1].scriptPubKey = cDevopsPayee;
+                pblock->vtx[0].vout[pblock->vtx[0].vout.size()-1].nValue = nDevopsPayment;
             }
             
             blockReward = blockReward - nDevopsPayment - nMasternodePayment;

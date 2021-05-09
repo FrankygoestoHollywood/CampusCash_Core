@@ -3057,15 +3057,15 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     if(nMasternodePayment > 0)
     {
         txNew.vout.resize(txNew.vout.size() + 1);
-        txNew.vout[size-1].scriptPubKey = cMasternodePayee;
-        txNew.vout[size-1].nValue = nMasternodePayment; 
+        txNew.vout[txNew.vout.size()-1].scriptPubKey = cMasternodePayee;
+        txNew.vout[txNew.vout.size()-1].nValue = nMasternodePayment; 
     }
     
     if(nDevopsPayment > 0)
     {
         txNew.vout.resize(txNew.vout.size() + 1);
-        txNew.vout[size-1].scriptPubKey = cDevopsPayee;
-        txNew.vout[size-1].nValue = nDevopsPayment;
+        txNew.vout[txNew.vout.size()-1].scriptPubKey = cDevopsPayee;
+        txNew.vout[txNew.vout.size()-1].nValue = nDevopsPayment;
     }
     
     int64_t blockValue = nCredit - nDevopsPayment - nMasternodePayment;
