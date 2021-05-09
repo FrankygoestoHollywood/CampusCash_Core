@@ -202,9 +202,6 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     CMasternodePaymentWinner newWinner;
 
-    CScript cDevopsPayee = GetScriptForDestination(CBitcoinAddress(Params().DevOpsAddress()).Get());
-    cMNpayee = cDevopsPayee;
-
     CMasternode *pmn = mnodeman.GetCurrentMasterNode(1);
     if(pmn == NULL) 
     {
@@ -216,8 +213,6 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     newWinner.nBlockHeight = nBlockHeight;
     newWinner.vin = pmn->vin;
     newWinner.payee = GetScriptForDestination(pmn->pubkey.GetID());
-
-    cMNpayee = newWinner.payee;
  
     if(AddWinningMasternode(newWinner))
     {
