@@ -94,11 +94,14 @@ Value getmininginfo(const Array& params, bool fHelp)
 
     // Define block rewards
     int64_t nRewardPoW = (uint64_t)GetProofOfWorkReward(0);
+    int64_t nRewardPoS = (uint64_t)GetProofOfStakeReward(0);
     CTxIn vin;
     CScript payee;
     if(masternodePayments.GetWinningMasternode(pindexBest->nHeight+1, vin, payee))
     {   
-        nRewardPoW += (uint64_t)GetTier2MasternodeBonusPayment(vin);
+        int64_t tier2Bonus = GetTier2MasternodeBonusPayment(vin);
+        nRewardPoW += tier2Bonus;
+        nRewardPoS += tier2Bonus;
     } 
 
     Object obj, diff, weight;
@@ -111,7 +114,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     diff.push_back(Pair("search-interval", (int)nLastCoinStakeSearchInterval));
     obj.push_back(Pair("difficulty", diff));
 
-    obj.push_back(Pair("blockvalue-PoS", (uint64_t)getstakesubsidy));
+    obj.push_back(Pair("blockvalue-PoS", (uint64_t)nRewardPoS));
     obj.push_back(Pair("blockvalue-PoW", (uint64_t)nRewardPoW));
     obj.push_back(Pair("netmhashps",  GetPoWMHashPS()));
     obj.push_back(Pair("netstakeweight", GetPoSKernelPS()));
