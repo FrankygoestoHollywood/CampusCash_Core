@@ -1042,15 +1042,16 @@ bool CMNengineSigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     return false;
 }
 
-bool CMNengineSigner::IsVinTier2(CTxIn& vin){
+bool CMNengineSigner::IsVinTier2(CTxIn& vin)
+{
     CTransaction txVin;
     uint256 hash;
-    if(GetTransaction(vin.prevout.hash, txVin, hash)){
-        BOOST_FOREACH(CTxOut out, txVin.vout){
-            if(out.nValue == MasternodeCollateral_Tier_2(pindexBest->nHeight)*COIN){
-                // Is tier 2
-                return true;
-            }
+    
+    if(GetTransaction(vin.prevout.hash, txVin, hash))
+    {
+        if(txVin.vout[vin.prevout.n].nValue == MasternodeCollateral_Tier_2(pindexBest->nHeight)*COIN){
+            // Is tier 2
+            return true;
         }
     }
 
