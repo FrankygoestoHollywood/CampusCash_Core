@@ -220,7 +220,10 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         ExtractDestination(newWinner.payee, address1);
         CCampusCashAddress address2(address1);
 
-        LogPrintf("Masternode-Payments::ProcessBlock - SUCCESS - height = %d  winner : %s...\n", nBlockHeight, address2.ToString().c_str());
+        int tier = 1;
+        if(mnEngineSigner.IsVinTier2(newWinner.vin)) tier = 2; 
+
+        LogPrintf("MASTERNODE WINNER - SUCCESS - height = %d  winner : %s  tier : %d\n", nBlockHeight, address2.ToString().c_str(), tier);
         return true;
     }
 
