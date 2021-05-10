@@ -93,8 +93,8 @@ Value getmininginfo(const Array& params, bool fHelp)
         nWeight = pwalletMain->GetStakeWeight();
 
     // Define block rewards
-    int64_t nRewardPoW = (uint64_t)GetProofOfWorkReward(0);
-    int64_t nRewardPoS = (uint64_t)GetProofOfStakeReward(0);
+    int64_t nRewardPoW = GetProofOfWorkReward(0);
+    int64_t nRewardPoS = GetProofOfStakeReward(0);
     CTxIn vin;
     CScript payee;
     if(masternodePayments.GetWinningMasternode(pindexBest->nHeight+1, vin, payee))

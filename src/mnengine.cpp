@@ -1050,6 +1050,7 @@ bool CMNengineSigner::IsVinTier2(CTxIn& vin)
     if(GetTransaction(vin.prevout.hash, txVin, hash))
     {
         if(txVin.vout[vin.prevout.n].nValue == MasternodeCollateral_Tier_2(pindexBest->nHeight)*COIN){
+            LogPrintf("CMNengineSigner::IsVinTier2(): vin - %s", vin.ToString().c_str());
             // Is tier 2
             return true;
         }
