@@ -2016,20 +2016,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
     if(!IsInitialBlockDownload())
     {
-        if(IsProofOfStake() && vtx[1].vout.size() >= 4)
-        {
-            int size = vtx[1].vout.size();
-            CTxDestination address1;
-            ExtractDestination(vtx[1].vout[size-1].scriptPubKey, address1);
-            CCampusCashAddress devopAddress(address1);
-            CTxDestination address2;
-            ExtractDestination(vtx[1].vout[size-2].scriptPubKey, address2);
-            CCampusCashAddress masternodeAddress(address2);
-
-            LogPrintf("ConnectBlock() POS : height - %d\n", pindex->nHeight);
-            LogPrintf("ConnectBlock() POS : masternode payment : address - %s  value - %d\n", masternodeAddress.ToString().c_str(), vtx[1].vout[size-2].nValue);
-            LogPrintf("ConnectBlock() POS : devops payment : address - %s  value - %d\n", devopAddress.ToString().c_str(), vtx[1].vout[size-1].nValue);
-        }
+        //TODO check MN and Devops payments
     }
 
     // ppcoin: track money supply and mint amount info
@@ -2565,13 +2552,10 @@ bool CBlock::AcceptBlock()
     }
 
     uint256 hashProof;
-    if (IsProofOfWork() && nHeight > Params().EndPoWBlock()){
-        if(GetBlockTime() > nPoWToggle){
-            if(nHeight > Params().EndPoWBlock_v2()){
-                return DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
-            }
-        }
-    } else {
+    if (IsProofOfWork() && nHeight > Params().EndPoWBlock_v2()){
+        return DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
+    } 
+    else {
         // PoW is checked in CheckBlock()
         if (IsProofOfWork())
         {
@@ -2770,7 +2754,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // If we don't already have its previous block, shunt it off to holding area until we get it
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
     {
-        LogPrintf("ProcessBlock: ORPHAN BLOCK %lu, prev=%s, time=%d\n", (unsigned long)mapOrphanBlocks.size(), pblock->hashPrevBlock.ToString(), pblock->GetBlockTime());
+        //LogPrintf("ProcessBlock: ORPHAN BLOCK %lu, prev=%s, time=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->hashPrevBlock.ToString(), DateTimeStrFormat("%x %H:%M:%S", pblock->GetBlockTime()));
 
         // Accept orphans as long as there is a node to request its parents from
         if (pfrom) {
@@ -2814,7 +2798,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
     vWorkQueue.push_back(hash);
-    bool findOrphans = false;
     for (unsigned int i = 0; i < vWorkQueue.size(); i++)
     {
         uint256 hashPrev = vWorkQueue[i];
@@ -2822,11 +2805,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
              mi != mapOrphanBlocksByPrev.upper_bound(hashPrev);
              ++mi)
         {
-            if(!findOrphans)
-            {
-                findOrphans = true;
-                LogPrintf("ProcessBlock: start processing orphan blocks, current nbr of orphans : %d\n", (unsigned long)mapOrphanBlocks.size());
-            }
             CBlock block;
             {
                 CDataStream ss(mi->second->vchBlock, SER_DISK, CLIENT_VERSION);
@@ -2841,14 +2819,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         }
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
-
-    if(findOrphans)
-    {
-        findOrphans = false;
-        LogPrintf("ProcessBlock: finish processing orphan blocks, current nbr of orphans : %d\n", (unsigned long)mapOrphanBlocks.size());
-    }
-
-    LogPrintf("ProcessBlock: ACCEPTED\n");
 
     return true;
 }

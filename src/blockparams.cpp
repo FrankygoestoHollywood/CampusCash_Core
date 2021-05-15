@@ -579,8 +579,6 @@ int64_t GetTier2MasternodeBonusPayment(CTxIn& vin)
 {
     int64_t ret2 = 0;
 
-    if(IsInitialBlockDownload()) return 0;
-
     // HardCap
     if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return 0;
     
