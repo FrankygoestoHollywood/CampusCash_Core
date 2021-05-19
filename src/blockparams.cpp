@@ -489,6 +489,8 @@ bool fMNtier2()
     //    return fMNtier2();
     //}
 
+    return false;
+    
     // Set TX values
     CTxIn vin;
     //spork
