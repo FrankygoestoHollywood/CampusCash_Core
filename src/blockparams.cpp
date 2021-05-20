@@ -487,8 +487,6 @@ bool fMNtier2()
     //    return fMNtier2();
     //}
 
-    return false;
-    
     // Set TX values
     CTxIn vin;
     //spork
@@ -496,7 +494,7 @@ bool fMNtier2()
         LogPrintf("MasterNode Tier Payment Toggle : Found MasterNode winner!\n");
         if(fMnT2){
             LogPrintf("MasterNode Tier Found: Tier-2\n");
-            return true;
+            return false;
         }
         else {
             LogPrintf("MasterNode Tier Found: Tier-1\n");
