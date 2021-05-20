@@ -55,6 +55,7 @@ namespace Checkpoints
         (226933,   uint256("0x9957578726e950382d499e55af8086a5b55ad869334947b51adc4681e41d55da")) // Never Remove
         (253375,   uint256("0x4bac34cf01f45424daa5b19ccf2aa3be62ba7aa96e97a0c699572af2bb5eaa77")) // Never Remove
         (262168,   uint256("0x00000000002fb4bc686a0a6c9019971e60fbfc956b100f7e2fa86bda483fd536"))
+        (348258,   uint256("0x72463265801c162f0ca96e1ea3226a66103ffd64ea4eec657311882b7ac9c9aa"))
     ;
 
     // TestNet has no checkpoints
