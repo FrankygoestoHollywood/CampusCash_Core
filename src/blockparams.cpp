@@ -355,7 +355,13 @@ void VRX_Dry_Run(const CBlockIndex* pindexLast)
     }
 
     if(pindexLast->nHeight == 93159) {
-         // Reset diff for fork (Tier 2 Masternode integration
+         // Reset diff for fork (Tier 2 Masternode integration)
+         fDryRun = true;
+         return;
+    }
+
+    if(pindexLast->nHeight == 348258) {
+         // Reset diff for fork (Tier 2 Masternode integration 2nd try)
          fDryRun = true;
          return;
     }
@@ -476,174 +482,147 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 // Idle Duration        : 5 Intervals (no adjustment)
 //
 
-//
-// Masternode Tier 2 Payout Toggle
-//
-bool fMNtier2()
-{
-    // Ensure exclusion of pointless looping
-    //if(nMNpayBlockHeight == pindexPrev->nHeight+1){
-    //    LogPrintf("MasterNode Tier Payment Toggle : Already ran for this block, skipping...\n");
-    //    return fMNtier2();
-    //}
-
-    // Set TX values
-    CTxIn vin;
-    //spork
-    if(masternodePayments.GetWinningMasternode(pindexPrev->nHeight+1, vin)){
-        LogPrintf("MasterNode Tier Payment Toggle : Found MasterNode winner!\n");
-        if(fMnT2){
-            LogPrintf("MasterNode Tier Found: Tier-2\n");
-            return false;
-        }
-        else {
-            LogPrintf("MasterNode Tier Found: Tier-1\n");
-            return false;
-        }
-    } else {
-        if(!IsInitialBlockDownload()){
-            LogPrintf("MasterNode Tier Payment Toggle : WARNING : Could not find Masternode winner!\n");
-        } else {
-            LogPrintf("MasterNode Tier Payment Toggle : Skipping during InitialBlockDownload\n");
-        }
-        return false;
-    }
-    return false;
-}
 
 //
 // PoW coin base reward
 //
-int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
+int64_t GetProofOfWorkReward(int64_t nFees)
 {
-    int64_t nSubsidy = 83 * COIN;
+     int64_t nSubsidy = 0;
 
-    if(pindexBest->GetBlockTime() > 1596024000) {
-            nSubsidy = nBlockStandardReward;
-    }
-
-    if(fMNtier2()) {
-        LogPrintf("GetProofOfWorkReward : Tier 2 rewards was selected\n");
-        if(pindexBest->GetBlockTime() > MASTERNODE_TIER_2_START) {
-            LogPrintf("GetProofOfWorkReward : Tier 2 rewards was set\n");
-            nSubsidy += 118 * COIN;
-        }
-    }
-
-    if(pindexBest->GetBlockTime() < 1596304801) {
-      nSubsidy += 160 * COIN;
-    }
-
-    if(nHeight > nReservePhaseStart) {
-        if(pindexBest->nMoneySupply < (nBlockRewardReserve * 100)) {
-            nSubsidy = nBlockRewardReserve;
-        }
-    }
-
-    // 30.21 = PoW Payments for regular miners
-    // hardCap v2.1
-    else if(pindexBest->nMoneySupply > MAX_SINGLE_TX)
+    // Premine
+    if(pindexBest->nHeight >= nReservePhaseStart)
     {
-        LogPrint("MINEOUT", "GetProofOfWorkReward(): create=%s nFees=%d\n", FormatMoney(nFees), nFees);
-        return nFees;
+        if(pindexBest->nMoneySupply < (nBlockRewardReserve * 100)) {
+            return nBlockRewardReserve;
+        }
+    }
+ 
+    // HardCap
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return nFees;
+    
+    // Old reward structures to allow sync from 0, harcoded timestamps and rewards
+    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    {
+        if(pindexBest->GetBlockTime() <= 1596024000) nSubsidy = 83 * COIN;
+        else if(pindexBest->GetBlockTime() <= 1596304800) nSubsidy = 285 * COIN;
+        else nSubsidy = 125 * COIN;
+
+        return nSubsidy + nFees;
     }
 
-    // Halving
-    nSubsidy >>= (nHeight / 500000); // Halves every 500,000 blocks
+    // Standard reward
+    nSubsidy = (nBlockStandardPoWReward >> (pindexBest->nHeight / 500000)) + nBaseFees;
 
-    LogPrint("creation", "GetProofOfWorkReward() : create=%s nSubsidy=%d\n", FormatMoney(nSubsidy), nSubsidy);
     return nSubsidy + nFees;
 }
 
 //
 // PoS coin base reward
 //
-int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, int64_t nFees)
+int64_t GetProofOfStakeReward(int64_t nFees)
 {
-    int64_t nSubsidy = (2.49 * COIN); // PoS Staking - pindexPrev is info from the last block, and -> means to get specific info from that block. Getblocktime is the epoch time of that block.
-    if(pindexPrev->GetBlockTime() > 1593907200 && pindexPrev->GetBlockTime() < 1612310400){ //2.49
-        nSubsidy = (2.905 * COIN); // ratio * coin =  this bloody phrase.
-    }else if(pindexPrev->GetBlockTime() > 1612310400 && pindexPrev->GetBlockTime() < 1643846400){
-        nSubsidy = (3.32 * COIN);
-    }else if(pindexPrev->GetBlockTime() > 1643846400 && pindexPrev->GetBlockTime() < 1659484800){
-        nSubsidy = (4.15 * COIN);
-    }else if(pindexPrev->GetBlockTime() > 1659484800){
-        nSubsidy = (4.98 * COIN);
-    }
+    int64_t nSubsidy = 0;
 
-    if(pindexBest->GetBlockTime() > 1596024000) {
-      nSubsidy = (58.25 * COIN); // PoS Staking - pindexPrev is info from the last block, and -> means to get specific info from that block. Getblocktime is the epoch time of that block.
-    if(pindexPrev->GetBlockTime() > 1596585600 && pindexPrev->GetBlockTime() < 1609804800){
-      nSubsidy = (58.875 * COIN); // (ratio * nBlockStandardReward) + 42 + (.1 * nBlockStandardReward)
-    }else if(pindexPrev->GetBlockTime() > 1609804800 && pindexPrev->GetBlockTime() < 1625443200){
-      nSubsidy = (59.5 * COIN);
-    }else if(pindexPrev->GetBlockTime() > 1625443200 && pindexPrev->GetBlockTime() < 1641340800){
-      nSubsidy = (60.75 * COIN);
-    }else if(pindexPrev->GetBlockTime() > 1641340800){
-      nSubsidy = (62 * COIN);
-    }
-    }
-
-    if(pindexBest->GetBlockTime() < 1596304801) {
-      nSubsidy += 20.8 * COIN;
-    }
-
-    if(fMNtier2()) {
-        if(pindexBest->GetBlockTime() > MASTERNODE_TIER_2_START) {
-            nSubsidy += 118 * COIN;
-        }
-    }
-
-    if(pindexPrev->nHeight+1 > nReservePhaseStart) { // If, all 100 blocks of the premine isn't done, then next blocks have premine value
-        if(pindexBest->nMoneySupply < (nBlockRewardReserve * 100)) {
-            nSubsidy = nBlockRewardReserve;
-        }
-    }
-
-    // hardCap v2.1
-    else if(pindexBest->nMoneySupply > MAX_SINGLE_TX)
+    // Premine
+    if(pindexBest->nHeight >= nReservePhaseStart)
     {
-        LogPrint("MINEOUT", "GetProofOfStakeReward(): create=%s nFees=%d\n", FormatMoney(nFees), nFees);
-        return nFees;
+        if(pindexBest->nMoneySupply < (nBlockRewardReserve * 100)) {
+            return nBlockRewardReserve;
+        }
+    }
+ 
+    // HardCap
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return nFees;
+
+    // Old reward structures to allow sync from 0, harcoded timestamps and rewards
+    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    {
+        if(pindexBest->GetBlockTime() <= 1596024000) nSubsidy = 2.905 * COIN;
+        else if(pindexBest->GetBlockTime() <= 1596304800) nSubsidy = 79.05 * COIN;
+        else if(pindexBest->GetBlockTime() <= 1596585600) nSubsidy = 58.25 * COIN;
+        else if(pindexBest->GetBlockTime() <= 1609804800) nSubsidy = 58.875 * COIN;
+        else nSubsidy = 59.5 * COIN;
+
+        return nSubsidy + nFees;
     }
 
-    LogPrint("creation", "GetProofOfStakeReward(): create=%s nCoinAge=%d\n", FormatMoney(nSubsidy), nCoinAge);
+    // Standard reward
+    if(pindexBest->nHeight <= 500000) nSubsidy = nBasePoSReward2 + nBaseFees;
+    else if(pindexBest->nHeight <= 1000000) nSubsidy = nBasePoSReward3 + nBaseFees;
+    else nSubsidy = nBasePoSReward4 + nBaseFees;
+
     return nSubsidy + nFees;
 }
 
 //
 // Masternode coin base reward
 //
-int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
+int64_t GetMasternodePayment()
 {
-    // Define values
     int64_t ret2 = 0;
-    if(pindexBest->GetBlockTime() > 1596024000) {
-        ret2 = 42 * COIN; // 42 CCASH
 
-        if(fMNtier2()) {
-            if(pindexBest->GetBlockTime() > MASTERNODE_TIER_2_START) {
-                ret2 += 118 * COIN;
-            }
-        }
+    // HardCap
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return 0;
+
+    // Old reward structures to allow sync from 0, harcoded timestamps and rewards
+    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    {
+        if(pindexBest->GetBlockTime() <= 1596024000) return 0;
+        return 42 * COIN;
     }
+    
+    // Standard reward
+    ret2 = nBaseMasternodeFees;
 
+    return ret2;
+}
+
+//
+// Masternode Tier2 bonus reward
+//
+int64_t GetTier2MasternodeBonusPayment(CTxIn& vin)
+{
+    int64_t ret2 = 0;
+
+    // HardCap
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return 0;
+    
+    // Old reward structures to allow sync from 0
+    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    {
+        return 0;
+    }
+    
+    // Standard reward
+    if(mnEngineSigner.IsVinTier2(vin))
+    {
+        ret2 = nTier2MasternodeBonusFees;
+    }
+    
     return ret2;
 }
 
 //
 // DevOps coin base reward
 //
-int64_t GetDevOpsPayment(int nHeight, int64_t blockValue)
+int64_t GetDevOpsPayment()
 {
     int64_t ret2 = 0;
-    if(pindexBest->GetBlockTime() > 1596024000) {
-    ret2 = 12.5 * COIN; // 12.5 CCASH per block = 10% of blocks.
-    }
 
-    if(pindexBest->GetBlockTime() < 1596304801) {
-      ret2 += 16 * COIN;
+    // HardCap
+    if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return 0;
+    
+    // Old reward structures to allow sync from 0, harcoded timestamps and rewards
+    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    {
+        if(pindexBest->GetBlockTime() <= 1596024000) return 16 * COIN;
+        if(pindexBest->GetBlockTime() <= 1596304801) return 28.5 * COIN;
+        return 12.5 * COIN;
     }
+    
+    // Standard reward
+    ret2 = nBaseDevOpsFees;
 
     return ret2;
 }

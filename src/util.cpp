@@ -117,11 +117,6 @@ string strRollbackToBlock = "";
 int64_t nMasterNodeChecksDelayBaseTime = 0;
 //MasterNode peer IP advanced relay system toggle
 bool fMnAdvRelay = false;
-//MasterNode tier 2
-bool fMnT2 = false;
-bool fMnWnr = false;
-int64_t nMNpayBlockHeight = 0;
-CScript cMNpayee;
 //Max Blockheight Value
 int maxBlockHeight = -1;
 
@@ -1232,7 +1227,11 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
                fprintf(ConfFile, "rpcport=18695\n");
                fprintf(ConfFile, "rpcconnect=127.0.0.1\n");
                fprintf(ConfFile, "rpcallowip=127.0.0.1\n");
-               fprintf(ConfFile, "addnode=45.77.210.8:19427\n");
+               fprintf(ConfFile, "addnode=46.101.247.122:19427\n");
+               fprintf(ConfFile, "addnode=46.101.247.122\n");
+               fprintf(ConfFile, "addnode=143.198.130.185:19427\n");
+               fprintf(ConfFile, "addnode=143.198.130.185\n");
+               /*fprintf(ConfFile, "addnode=45.77.210.8:19427\n");
                fprintf(ConfFile, "addnode=45.77.210.8\n");
                fprintf(ConfFile, "addnode=45.77.210.234:19427\n");
                fprintf(ConfFile, "addnode=45.77.210.234\n");
@@ -1265,7 +1264,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
                fprintf(ConfFile, "addnode=188.68.33.155\n");
                fprintf(ConfFile, "addnode=188.68.33.155:19427\n");
                fprintf(ConfFile, "addnode=5.45.108.38\n");
-               fprintf(ConfFile, "addnode=5.45.108.38:19427\n");
+               fprintf(ConfFile, "addnode=5.45.108.38:19427\n");*/
                fclose(ConfFile);
     }
 

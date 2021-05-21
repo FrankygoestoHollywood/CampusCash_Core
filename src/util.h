@@ -151,11 +151,6 @@ extern int64_t nLiveForkToggle;
 extern int64_t nMasterNodeChecksDelayBaseTime;
 //MasterNode peer IP advanced relay system toggle
 extern bool fMnAdvRelay;
-//MasterNode is tier 2
-extern bool fMnT2;
-extern CScript cMNpayee;
-extern int64_t nMNpayBlockHeight;
-extern bool fMnWnr;
 //will sync until this block height. default -1 which represents disabled
 extern int maxBlockHeight;
 

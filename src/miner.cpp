@@ -368,99 +368,47 @@ CBlock* CreateNewBlock(CReserveKey& reservekey, bool fProofOfStake, int64_t* pFe
         if (fDebug && GetBoolArg("-printpriority", false))
             LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
         // > CCASH <
-        if (!fProofOfStake){
-            pblock->vtx[0].vout[0].nValue = GetProofOfWorkReward(pindexPrev->nHeight + 1, nFees);
+        if (!fProofOfStake)
+        {
+            int64_t blockReward = GetProofOfWorkReward(nFees);
 
-            // Check for payment update fork
-            if(pindexBest->GetBlockTime() > 0){
-                if(pindexBest->GetBlockTime() > nPaymentUpdate_1){ // Monday, May 20, 2019 12:00:00 AM
-                    // masternode/devops payment
-                    bool hasPayment = true;
-                    bool bMasterNodePayment = true;// TODO: Setup proper network toggle
-                    CScript do_payee;
-                    CTxIn vin;// TODO: Refactor in order to remove this like "payee" was
+            CScript cDevopsPayee = GetScriptForDestination(CBitcoinAddress(Params().DevOpsAddress()).Get());
+            CScript cMasternodePayee;
+            int64_t nDevopsPayment = GetDevOpsPayment();
+            int64_t nMasternodePayment = GetMasternodePayment();
 
-                    // Determine our payment address for devops
-                    //
-                    // OLD IMPLEMENTATION COMMNETED OUT
-                    // CScript devopsScript;
-                    // devopsScript << OP_DUP << OP_HASH160 << ParseHex(Params().DevOpsPubKey()) << OP_EQUALVERIFY << OP_CHECKSIG;
-                    // do_payee = devopsScript;
-                    //
-                    // Define Address
-                    //
-                    // TODO: Clean this up, it's a mess (could be done much more cleanly)
-                    //       Not an issue otherwise, merely a pet peev. Done in a rush...
-                    //
-                    CBitcoinAddress devopaddress;
-                    if (Params().NetworkID() == CChainParams::MAIN) {
-                        if(GetTime() < nPaymentUpdate_2) { devopaddress = CBitcoinAddress("Ce1XyENjUHHPBt8mxy2LupkH2PnequevMM"); } // TODO: Ce1XyENjUHHPBt8mxy2LupkH2PnequevMM
-                        else { devopaddress = CBitcoinAddress("Ce1XyENjUHHPBt8mxy2LupkH2PnequevMM"); } // Ce1XyENjUHHPBt8mxy2LupkH2PnequevMM
-                    } else if (Params().NetworkID() == CChainParams::TESTNET) {
-                        devopaddress = CBitcoinAddress(""); // Input DevOps for Testnet
-                    } else if (Params().NetworkID() == CChainParams::REGTEST) {
-                        devopaddress = CBitcoinAddress(""); // input DevOps for Regnet
-                    }
+            CTxIn vin;
+            CScript payee;
+            if(masternodePayments.GetWinningMasternode(pindexPrev->nHeight+1, vin, payee))
+            {   
+                cMasternodePayee = payee;
+                int64_t nTier2Bonus = GetTier2MasternodeBonusPayment(vin);
+                blockReward += nTier2Bonus;
+                nMasternodePayment += nTier2Bonus;
+            } 
+            else 
+            {
+                LogPrintf("CreateNewBlock : WARNING : Could not find relayed Masternode winner!\n");
+                cMasternodePayee = cDevopsPayee;
+            }
 
-                    // verify address
-                    if(devopaddress.IsValid())
-                    {
-                        //spork
-                        if(pindexBest->GetBlockTime() > 1546123500) { // ON  (Saturday, December 29, 2018 10:45 PM)
-                                do_payee = GetScriptForDestination(devopaddress.Get());
-                        }
-                        else {
-                            hasPayment = false;
-                        }
-                    }
-                    else
-                    {
-                        LogPrintf("CreateNewBlock(): Failed to detect dev address to pay\n");
-                    }
+            if(nMasternodePayment > 0)
+            {
+                pblock->vtx[0].vout.resize(pblock->vtx[0].vout.size() + 1);
+                pblock->vtx[0].vout[pblock->vtx[0].vout.size()-1].scriptPubKey = cMasternodePayee;
+                pblock->vtx[0].vout[pblock->vtx[0].vout.size()-1].nValue = nMasternodePayment; 
+            }
+            
+            if(nDevopsPayment > 0)
+            {
+                pblock->vtx[0].vout.resize(pblock->vtx[0].vout.size() + 1);
+                pblock->vtx[0].vout[pblock->vtx[0].vout.size()-1].scriptPubKey = cDevopsPayee;
+                pblock->vtx[0].vout[pblock->vtx[0].vout.size()-1].nValue = nDevopsPayment;
+            }
+            
+            blockReward = blockReward - nDevopsPayment - nMasternodePayment;
 
-                    if(bMasterNodePayment) {
-                        // Try to get frist masternode in our list
-                        CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);// TODO: Refactor this, can be done away with
-                        // If initial sync or we can't find a masternode in our list
-                        if(winningNode){
-                            //spork
-                            if(masternodePayments.GetWinningMasternode(pindexPrev->nHeight+1, vin)){
-                                LogPrintf("CreateNewBlock(): Found relayed Masternode winner!\n");
-                            } else {
-                                LogPrintf("CreateNewBlock(): WARNING: Could not find relayed Masternode winner!\n");
-                            }
-                        } else {
-                            LogPrintf("CreateNewBlock(): WARNING: No MasterNodes online to pay!\n");
-                        }
-                    } else {
-                        hasPayment = false;
-                    }
-
-                    int64_t blockReward = GetProofOfWorkReward(pindexPrev->nHeight + 1, nFees);
-                    CAmount masternodePayment = GetMasternodePayment(nHeight, blockReward);
-                    CAmount devopsPayment = GetDevOpsPayment(nHeight, blockReward);
-
-                    if (hasPayment) {
-                        pblock->vtx[0].vout.resize(3);
-                        pblock->vtx[0].vout[1].scriptPubKey = cMNpayee;
-                        pblock->vtx[0].vout[1].nValue = masternodePayment;
-                        pblock->vtx[0].vout[2].scriptPubKey = do_payee;
-                        pblock->vtx[0].vout[2].nValue = devopsPayment;
-                        pblock->vtx[0].vout[0].nValue = blockReward - (masternodePayment + devopsPayment);
-                    }
-
-                    CTxDestination address1;
-                    CTxDestination address3;
-                    ExtractDestination(cMNpayee, address1);
-                    ExtractDestination(do_payee, address3);
-                    CBitcoinAddress address2(address1);
-                    CBitcoinAddress address4(address3);
-                    LogPrintf("CreateNewBlock(): Masternode payment %lld to %s\n",
-                    masternodePayment, address2.ToString().c_str());
-                    LogPrintf("CreateNewBlock(): Devops payment %lld to %s\n",
-                    devopsPayment, address4.ToString().c_str());
-                }
-            } //
+            pblock->vtx[0].vout[0].nValue = blockReward;
         }
 
         if (pFees)

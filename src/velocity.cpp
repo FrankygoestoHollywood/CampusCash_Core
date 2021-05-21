@@ -27,13 +27,10 @@ int VelocityI(int nHeight)
    Returns true if nHeight is higher or equal to VELOCITY_HEIGHT */
 bool Velocity_check(int nHeight)
 {
-    LogPrintf("Checking for Velocity on block %u: ",nHeight);
     if(VelocityI(nHeight) >= 0)
     {
-        LogPrintf("Velocity is currently Enabled\n");
         return true;
     }
-    LogPrintf("Velocity is currently disabled\n");
     return false;
 }
 
@@ -134,7 +131,7 @@ bool Velocity(CBlockIndex* prevBlock, CBlock* block)
     // Verify minimum Velocity rate
     if( VELOCITY_RATE[i] > 0 && TXrate >= VELOCITY_MIN_RATE[i] )
     {
-        LogPrintf("CHECK_PASSED: block spacing has met Velocity constraints\n");
+        //LogPrintf("CHECK_PASSED: block spacing has met Velocity constraints\n");
     }
     // Rates that are too rapid are rejected without exception
     else if( VELOCITY_RATE[i] > 0 && TXrate < VELOCITY_MIN_RATE[i] )
@@ -163,7 +160,7 @@ bool Velocity(CBlockIndex* prevBlock, CBlock* block)
         if(block->IsProofOfStake())
         {
             fpayment = false;
-            devopsPayment = GetDevOpsPayment(nHeight, nPoSageReward);
+            devopsPayment = GetDevOpsPayment();
             // Set block TX values
             BOOST_FOREACH(const CTransaction& tx, block->vtx)
             {
@@ -212,6 +209,5 @@ bool Velocity(CBlockIndex* prevBlock, CBlock* block)
     }
 
     // Velocity constraints met, return block acceptance
-    LogPrintf("ACCEPTED: block has met all Velocity constraints\n");
     return true;
 }

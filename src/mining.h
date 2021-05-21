@@ -18,7 +18,18 @@ static const int64_t nGenesisBlockReward = 1 * COIN;
 /** Reserve block subsidy */
 static const int64_t nBlockRewardReserve = 2000000 * COIN; // premine 200,000,000 CCASH
 /** Standard block subsidy */
-static const int64_t nBlockStandardReward = 125 * COIN; // Tier 2 will create it's own nStandardReward
+static const int64_t nBlockStandardReward = 125 * COIN; // older for chain
+/** Standard PoW Reward **/
+static const int64_t nBlockStandardPoWReward = 83 * COIN;
+/** Standard PoS Rewards **/
+static const int64_t nBasePoSReward2 = 5 * COIN;
+static const int64_t nBasePoSReward3 = 10 * COIN;
+static const int64_t nBasePoSReward4 = 15 * COIN;
+/** Standard Fees **/
+static const int64_t nBaseDevOpsFees = 28.5 * COIN; // Tier 1 fees + DevOpS, Tier 2 masternodes will add on 118 coins to pay Tier 2
+static const int64_t nBaseMasternodeFees = 42 * COIN; // Tier 1 fees + DevOpS, Tier 2 masternodes will add on 118 coins to pay Tier 2
+static const int64_t nTier2MasternodeBonusFees = 118 * COIN; // Tier 1 fees + DevOpS, Tier 2 masternodes will add on 118 coins to pay Tier 2
+static const int64_t nBaseFees = nBaseMasternodeFees + nBaseDevOpsFees; // Tier 1 fees + DevOpS, Tier 2 masternodes will add on 118 coins to pay Tier 2
 /** Block spacing preferred */
 static const int64_t BLOCK_SPACING = (1 * 60); // One Minute
 /** Block spacing minimum */

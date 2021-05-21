@@ -106,7 +106,7 @@ public:
         strMNenginePoolDummyAddress = "CcABDmWkcSZPw8rMtoobShVFuudhf1svZu"; // CVGQAbKX5MvmsSN4x1GeCNqNsxzkPJuWEW devopsaddress is dHy3LZvqX5B2rAAoLiA7Y7rpvkLXKTkD18
         strDevOpsAddress = "Ce1XyENjUHHPBt8mxy2LupkH2PnequevMM"; // CaKwWL6e84WeKGsqBPYPXckkgp6jUa2ARr
         nEndPoWBlock = 15010;
-        nEndPoWBlock_v2 = 525600; // Changed to ensure One year of mining
+        nEndPoWBlock_v2 = 1000000; // Changed to ensure 1 000 000 blocks of mining
         nStartPoSBlock = 1;
     }
 

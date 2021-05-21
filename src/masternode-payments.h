@@ -66,7 +66,7 @@ public:
 class CMasternodePayments
 {
 private:
-    std::vector<CMasternodePaymentWinner> vWinning;
+    std::map<int, CMasternodePaymentWinner> mWinning;
     int nSyncedFromPeer;
     std::string strMasterPrivKey;
     std::string strMainPubKey;
@@ -90,9 +90,8 @@ public:
     //
 
     uint64_t CalculateScore(uint256 blockHash, CTxIn& vin);
-    bool GetWinningMasternode(int nBlockHeight, CTxIn& vin);
+    bool GetWinningMasternode(int nBlockHeight, CTxIn& vin, CScript& payee);
     bool AddWinningMasternode(CMasternodePaymentWinner& winner);
-    bool NodeisCapable();
     bool ProcessBlock(int nBlockHeight);
     void Relay(CMasternodePaymentWinner& winner);
     void Sync(CNode* node);

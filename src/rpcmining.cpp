@@ -49,7 +49,7 @@ Value getsubsidy(const Array& params, bool fHelp)
             "getsubsidy [nTarget]\n"
             "Returns proof-of-work subsidy value for the specified value of target.");
 
-    return (int64_t)GetProofOfStakeReward(pindexBest->pprev, 0, 0);
+    return (int64_t)GetProofOfStakeReward(0);
 }
 
 Value getstakesubsidy(const Array& params, bool fHelp)
@@ -71,12 +71,14 @@ Value getstakesubsidy(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
 
-    uint64_t nCoinAge;
-    CTxDB txdb("r");
-    if (!tx.GetCoinAge(txdb, pindexBest, nCoinAge))
-        throw JSONRPCError(RPC_MISC_ERROR, "GetCoinAge failed");
-
-    return (uint64_t)GetProofOfStakeReward(pindexBest->pprev, nCoinAge, 0);
+    CTxIn vin;
+    CScript payee;
+    if(masternodePayments.GetWinningMasternode(pindexBest->nHeight+1, vin, payee))
+    {   
+        return (uint64_t)GetProofOfStakeReward(0) + (uint64_t)GetTier2MasternodeBonusPayment(vin);
+    } 
+        
+    return (uint64_t)GetProofOfStakeReward(0);
 }
 
 Value getmininginfo(const Array& params, bool fHelp)
@@ -91,7 +93,16 @@ Value getmininginfo(const Array& params, bool fHelp)
         nWeight = pwalletMain->GetStakeWeight();
 
     // Define block rewards
-    int64_t nRewardPoW = (uint64_t)GetProofOfWorkReward(nBestHeight, 0);
+    int64_t nRewardPoW = GetProofOfWorkReward(0);
+    int64_t nRewardPoS = GetProofOfStakeReward(0);
+    CTxIn vin;
+    CScript payee;
+    if(masternodePayments.GetWinningMasternode(pindexBest->nHeight+1, vin, payee))
+    {   
+        int64_t tier2Bonus = GetTier2MasternodeBonusPayment(vin);
+        nRewardPoW += tier2Bonus;
+        nRewardPoS += tier2Bonus;
+    } 
 
     Object obj, diff, weight;
     obj.push_back(Pair("blocks",        (int)nBestHeight));
@@ -103,8 +114,8 @@ Value getmininginfo(const Array& params, bool fHelp)
     diff.push_back(Pair("search-interval", (int)nLastCoinStakeSearchInterval));
     obj.push_back(Pair("difficulty", diff));
 
-    obj.push_back(Pair("blockvalue-PoS", (uint64_t)getstakesubsidy));
-    obj.push_back(Pair("blockvalue-PoW", nRewardPoW));
+    obj.push_back(Pair("blockvalue-PoS", (uint64_t)nRewardPoS));
+    obj.push_back(Pair("blockvalue-PoW", (uint64_t)nRewardPoW));
     obj.push_back(Pair("netmhashps",  GetPoWMHashPS()));
     obj.push_back(Pair("netstakeweight", GetPoSKernelPS()));
     obj.push_back(Pair("errors", GetWarnings("statusbar")));
@@ -115,7 +126,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     weight.push_back(Pair("combined", (uint64_t)nWeight));
     obj.push_back(Pair("stakeweight", weight));
 
-    obj.push_back(Pair("stakeinterest", (uint64_t)getstakesubsidy));
+    //obj.push_back(Pair("stakeinterest", (uint64_t)getstakesubsidy));
     obj.push_back(Pair("testnet", TestNet()));
     return obj;
 }
@@ -414,13 +425,10 @@ Value getwork(const Array& params, bool fHelp)
     if (IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "CampusCash is downloading blocks...");
 
-    if (pindexBest->nHeight >= Params().EndPoWBlock()){
-        if(pindexBest->GetBlockTime() >= nPoWToggle){
-            if(pindexBest->nHeight > Params().EndPoWBlock_v2()){
-                throw JSONRPCError(RPC_MISC_ERROR, "No more PoW blocks");
-            }
-        }
+    if(pindexBest->nHeight >= Params().EndPoWBlock_v2()){
+        throw JSONRPCError(RPC_MISC_ERROR, "No more PoW blocks");
     }
+
 
     typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
@@ -571,12 +579,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
     if (IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "CampusCash is downloading blocks...");
 
-    if (pindexBest->nHeight >= Params().EndPoWBlock()){
-        if(pindexBest->GetBlockTime() >= nPoWToggle){
-            if(pindexBest->nHeight > Params().EndPoWBlock_v2()){
-                throw JSONRPCError(RPC_MISC_ERROR, "No more PoW blocks");
-            }
-        }
+    if(pindexBest->nHeight >= Params().EndPoWBlock_v2()){
+        throw JSONRPCError(RPC_MISC_ERROR, "No more PoW blocks");
     }
 
     // Update block
@@ -680,44 +684,42 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("version", pblock->nVersion));
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
     result.push_back(Pair("transactions", transactions));
-    // Check for payment upgrade fork
-    if (pindexBest->GetBlockTime() > 0)
+
+    // Set Masternode / DevOps payments
+    int64_t masternodePayment = GetMasternodePayment();
+    int64_t devopsPayment = GetDevOpsPayment();
+    std::string devopsPayee = Params().DevOpsAddress();
+    std::string masternodePayee;
+
+    // Include DevOps payments
+    result.push_back(Pair("devops_payee", devopsPayee));
+    result.push_back(Pair("devops_amount", (int64_t)devopsPayment));
+    result.push_back(Pair("devops_payments", true));
+    result.push_back(Pair("enforce_devops_payments", true));
+
+    // Include Masternode payments
+    CTxIn vin;
+    CScript payee;
+    if(masternodePayments.GetWinningMasternode(pindexPrev->nHeight+1, vin, payee))
+    {   
+        CTxDestination address1;
+        ExtractDestination(payee, address1);
+        CBitcoinAddress address2(address1);
+        masternodePayee = address2.ToString().c_str();
+        masternodePayment += GetTier2MasternodeBonusPayment(vin);
+    } 
+    else 
     {
-        if (pindexBest->GetBlockTime() > nPaymentUpdate_1) // Monday, May 20, 2019 12:00:00 AM
-        {
-            // Set Masternode / DevOps payments
-            int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, networkPayment);
-            int64_t devopsPayment = GetDevOpsPayment(pindexPrev->nHeight+1, networkPayment);
-            std::string devpayee2 = "CcABDmWkcSZPw8rMtoobShVFuudhf1svZu"; // CVGQAbKX5MvmsSN4x1GeCNqNsxzkPJuWEW
-
-            if (pindexBest->GetBlockTime() < nPaymentUpdate_2) {
-                devpayee2 = Params().DevOpsAddress();
-            }
-
-            // Include DevOps payments
-            CAmount devopsSplit = devopsPayment;
-            result.push_back(Pair("devops_payee", devpayee2));
-            result.push_back(Pair("devops_amount", (int64_t)devopsSplit));
-            result.push_back(Pair("devops_payments", true));
-            result.push_back(Pair("enforce_devops_payments", true));
-
-            // Include Masternode payments
-            CAmount masternodeSplit = masternodePayment;
-            CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
-            if (winningNode) {
-                CScript payee = GetScriptForDestination(winningNode->pubkey.GetID());
-                CTxDestination address1;
-                ExtractDestination(payee, address1);
-                CBitcoinAddress address2(address1);
-                result.push_back(Pair("masternode_payee", address2.ToString().c_str()));
-            } else {
-                result.push_back(Pair("masternode_payee", devpayee2.c_str()));
-            }
-            result.push_back(Pair("payee_amount", (int64_t)masternodeSplit));
-            result.push_back(Pair("masternode_payments", true));
-            result.push_back(Pair("enforce_masternode_payments", true));
-        }
+        masternodePayee = devopsPayee;
     }
+
+    networkPayment += masternodePayment + devopsPayment;
+
+    result.push_back(Pair("masternode_payee", masternodePayee));
+    result.push_back(Pair("payee_amount", (int64_t)masternodePayment));
+    result.push_back(Pair("masternode_payments", true));
+    result.push_back(Pair("enforce_masternode_payments", true));
+
     // Standard values cont...
     result.push_back(Pair("coinbaseaux", aux));
     result.push_back(Pair("coinbasevalue", networkPayment));
