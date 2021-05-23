@@ -691,13 +691,6 @@ Value getblocktemplate(const Array& params, bool fHelp)
     std::string devopsPayee = Params().DevOpsAddress();
     std::string masternodePayee;
 
-    // Include DevOps payments
-    result.push_back(Pair("devops_payee", devopsPayee));
-    result.push_back(Pair("devops_amount", (int64_t)devopsPayment));
-    result.push_back(Pair("devops_payments", true));
-    result.push_back(Pair("enforce_devops_payments", true));
-
-    // Include Masternode payments
     CTxIn vin;
     CScript payee;
     if(masternodePayments.GetWinningMasternode(pindexPrev->nHeight+1, vin, payee))
@@ -713,12 +706,30 @@ Value getblocktemplate(const Array& params, bool fHelp)
         masternodePayee = devopsPayee;
     }
 
-    networkPayment += masternodePayment + devopsPayment;
+    CScript devopsScript = GetScriptForDestination(CBitcoinAddress(devopsPayee).Get());
+    CScript masternodeScript = GetScriptForDestination(CBitcoinAddress(masternodePayee).Get());
 
-    result.push_back(Pair("masternode_payee", masternodePayee));
-    result.push_back(Pair("payee_amount", (int64_t)masternodePayment));
-    result.push_back(Pair("masternode_payments", true));
+    // Include Masternode / DevOps payments
+    Array aMasternode;
+
+    Object oDevops;
+    oDevops.push_back(Pair("payee", devopsPayee));
+    oDevops.push_back(Pair("script", devopsScript.ToString().c_str()));
+    oDevops.push_back(Pair("amount", (int64_t)devopsPayment));
+    
+    Object oMasternode;
+    oMasternode.push_back(Pair("payee", masternodePayee));
+    oMasternode.push_back(Pair("script", masternodeScript.ToString().c_str()));
+    oMasternode.push_back(Pair("amount", (int64_t)masternodePayment));
+    
+    aMasternode.push_back(oMasternode);
+    aMasternode.push_back(oDevops);
+
+    result.push_back(Pair("masternode", aMasternode));
+    result.push_back(Pair("masternode_payments_started", true));
     result.push_back(Pair("enforce_masternode_payments", true));
+
+    networkPayment += masternodePayment + devopsPayment;
 
     // Standard values cont...
     result.push_back(Pair("coinbaseaux", aux));
