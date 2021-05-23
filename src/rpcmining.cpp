@@ -706,20 +706,20 @@ Value getblocktemplate(const Array& params, bool fHelp)
         masternodePayee = devopsPayee;
     }
 
-    CScript devopsScript = GetScriptForDestination(CBitcoinAddress(devopsPayee).Get());
-    CScript masternodeScript = GetScriptForDestination(CBitcoinAddress(masternodePayee).Get());
+    CScriptID devopsScript = GetScriptForDestination(CBitcoinAddress(devopsPayee).Get()).GetID();
+    CScriptID masternodeScript = GetScriptForDestination(CBitcoinAddress(masternodePayee).Get()).GetID();
 
     // Include Masternode / DevOps payments
     Array aMasternode;
 
     Object oDevops;
     oDevops.push_back(Pair("payee", devopsPayee));
-    oDevops.push_back(Pair("script", devopsScript.ToString().c_str()));
+    oDevops.push_back(Pair("script", devopsScript.GetHex()));
     oDevops.push_back(Pair("amount", (int64_t)devopsPayment));
     
     Object oMasternode;
     oMasternode.push_back(Pair("payee", masternodePayee));
-    oMasternode.push_back(Pair("script", masternodeScript.ToString().c_str()));
+    oMasternode.push_back(Pair("script", masternodeScript.GetHex()));
     oMasternode.push_back(Pair("amount", (int64_t)masternodePayment));
     
     aMasternode.push_back(oMasternode);
