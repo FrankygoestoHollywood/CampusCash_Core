@@ -710,24 +710,25 @@ Value getblocktemplate(const Array& params, bool fHelp)
     CScript masternodeScript = GetScriptForDestination(CBitcoinAddress(masternodePayee).Get());
 
     // Include Masternode / DevOps payments
-    Array aMasternode;
-
     Object oDevops;
     oDevops.push_back(Pair("payee", devopsPayee));
     oDevops.push_back(Pair("script", HexStr(devopsScript)));
     oDevops.push_back(Pair("amount", (int64_t)devopsPayment));
+    
+    Array aSuperblock;
+    aSuperblock.push_back(oDevops);
+    result.push_back(Pair("superblock", aSuperblock));
+    result.push_back(Pair("superblocks_started", true));
+    result.push_back(Pair("superblocks_enabled", true));
     
     Object oMasternode;
     oMasternode.push_back(Pair("payee", masternodePayee));
     oMasternode.push_back(Pair("script", HexStr(masternodeScript)));
     oMasternode.push_back(Pair("amount", (int64_t)masternodePayment));
     
-    aMasternode.push_back(oMasternode);
-    aMasternode.push_back(oDevops);
-
-    result.push_back(Pair("masternode", aMasternode));
+    result.push_back(Pair("masternode", oMasternode));
     result.push_back(Pair("masternode_payments_started", true));
-    result.push_back(Pair("enforce_masternode_payments", true));
+    result.push_back(Pair("masternode_payments_enforced", true));
 
     networkPayment += masternodePayment + devopsPayment;
 
