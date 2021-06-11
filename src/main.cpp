@@ -1987,38 +1987,66 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
         mapQueuedChanges[hashTx] = CTxIndex(posThisTx, tx.vout.size());
     }
 
-    if (IsProofOfWork())
-    {
-        int64_t nCalculatedReward = GetProofOfWorkReward(nFees);
+    //
+    // Check the reward structure
+    //
 
-        // Old reward structures to allow sync from 0
-        if(pindex->pprev->GetBlockTime() <= nRewardSystemUpdate)
+    int64_t nCalculatedReward = IsProofOfWork() ? GetProofOfWorkReward(nFees) : GetProofOfStakeReward(nFees);
+    int64_t nReward = IsProofOfWork() ? vtx[0].GetValueOut() : nStakeReward;
+
+    // Total Blockvalue
+    
+    // Old condition to allow sync from 0
+    if (IsProofOfWork() && pindex->pprev->GetBlockTime() <= nRewardSystemUpdate){
+        if (nReward > nCalculatedReward) 
+            return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)", nReward, nCalculatedReward));
+    }
+
+    // Standard Blockvalue check
+    else if (nReward != nCalculatedReward && nReward != nCalculatedReward + nTier2MasternodeBonusFees){
+        return DoS(50, error("ConnectBlock() : blockvalue mismatch (actual=%d vs calculated=%d / %d)", nReward, nCalculatedReward, nCalculatedReward + nTier2MasternodeBonusFees));
+    }
+    
+    // Masternode and Devops payments
+
+    // Check only after nRewardSystemUpdate2 and before Hardcap
+    if (!IsInitialBlockDownload() && !fLiteMode && pindex->pprev->GetBlockTime() > nRewardSystemUpdate2 && nReward != nFees)
+    {
+        int64_t nDevopsReward = GetDevOpsPayment();
+        int64_t nMasternodeReward = GetMasternodePayment();
+        CScript cDevopsPayee = GetScriptForDestination(CBitcoinAddress(Params().DevOpsAddress()).Get());
+        CScript cMasternodePayee = cDevopsPayee;
+        
+        CTxIn vin;
+        if(masternodePayments.GetWinningMasternode(pindex->nHeight, vin, cMasternodePayee))
         {
-            if (vtx[0].GetValueOut() > nCalculatedReward){
-                return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)", vtx[0].GetValueOut(), nCalculatedReward));
-            }
+            int64_t nTier2Bonus = GetTier2MasternodeBonusPayment(vin);
+            nMasternodeReward += nTier2Bonus;
+            nCalculatedReward += nTier2Bonus;
         }
-        else
+        else LogPrintf("ConnectBlock() : WARNING : Could not find Masternode winner!\n");
+        
+        int nTxIndex = IsProofOfStake() ? 1 : 0;
+        bool containsDevopsPayment = false;
+        bool containsMasternodePayment = false;
+
+        BOOST_FOREACH(CTxOut& txOut, vtx[nTxIndex])
         {
-            if (vtx[0].GetValueOut() != nCalculatedReward && vtx[0].GetValueOut() != nCalculatedReward + nTier2MasternodeBonusFees){
-                return DoS(50, error("ConnectBlock() : coinbase reward exceeded (actual=%d vs calculated=%d)", vtx[0].GetValueOut(), nCalculatedReward));
-            }
+            if(txOut.scriptPubKey == cDevopsPayee && txOut.nValue == nDevopsReward) containsDevopsPayment = true;
+            if(txOut.scriptPubKey == cMasternodePayee && txOut.nValue == nMasternodeReward) containsMasternodePayment = true;
         }
-    }
-    if (IsProofOfStake())
-    {
-        int64_t nCalculatedStakeReward = GetProofOfStakeReward(nFees);
 
-        if (nStakeReward != nCalculatedStakeReward && nStakeReward != nCalculatedStakeReward + nTier2MasternodeBonusFees){
-            return DoS(50, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
-        }
-    }
+        if(!containsDevopsPayment) 
+            return error("ConnectBlock() : Devops payment missing or incorrect");
+        
+        if(!containsMasternodePayment) 
+            return error("ConnectBlock() : Masternode payment missing or incorrect");
 
-    if(!IsInitialBlockDownload())
-    {
-        //TODO check MN and Devops payments
+        // Better Blockvalue check in this context
+        if (nReward != nCalculatedReward)
+            return DoS(50, error("ConnectBlock() : blockvalue mismatch (actual=%d vs calculated=%d)", nReward, nCalculatedReward));
     }
-
+ 
     // ppcoin: track money supply and mint amount info
     pindex->nMint = nValueOut - nValueIn + nFees;
     pindex->nMoneySupply = (pindex->pprev? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
