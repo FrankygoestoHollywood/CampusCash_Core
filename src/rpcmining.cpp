@@ -691,13 +691,6 @@ Value getblocktemplate(const Array& params, bool fHelp)
     std::string devopsPayee = Params().DevOpsAddress();
     std::string masternodePayee;
 
-    // Include DevOps payments
-    result.push_back(Pair("devops_payee", devopsPayee));
-    result.push_back(Pair("devops_amount", (int64_t)devopsPayment));
-    result.push_back(Pair("devops_payments", true));
-    result.push_back(Pair("enforce_devops_payments", true));
-
-    // Include Masternode payments
     CTxIn vin;
     CScript payee;
     if(masternodePayments.GetWinningMasternode(pindexPrev->nHeight+1, vin, payee))
@@ -713,12 +706,32 @@ Value getblocktemplate(const Array& params, bool fHelp)
         masternodePayee = devopsPayee;
     }
 
-    networkPayment += masternodePayment + devopsPayment;
 
-    result.push_back(Pair("masternode_payee", masternodePayee));
-    result.push_back(Pair("payee_amount", (int64_t)masternodePayment));
-    result.push_back(Pair("masternode_payments", true));
-    result.push_back(Pair("enforce_masternode_payments", true));
+    CScript devopsScript = GetScriptForDestination(CBitcoinAddress(devopsPayee).Get());
+    CScript masternodeScript = GetScriptForDestination(CBitcoinAddress(masternodePayee).Get());
+
+    // Include Masternode / DevOps payments
+    Object oDevops;
+    oDevops.push_back(Pair("payee", devopsPayee));
+    oDevops.push_back(Pair("script", HexStr(devopsScript)));
+    oDevops.push_back(Pair("amount", (int64_t)devopsPayment));
+    
+    Array aSuperblock;
+    aSuperblock.push_back(oDevops);
+    result.push_back(Pair("superblock", aSuperblock));
+    result.push_back(Pair("superblocks_started", true));
+    result.push_back(Pair("superblocks_enabled", true));
+    
+    Object oMasternode;
+    oMasternode.push_back(Pair("payee", masternodePayee));
+    oMasternode.push_back(Pair("script", HexStr(masternodeScript)));
+    oMasternode.push_back(Pair("amount", (int64_t)masternodePayment));
+    
+    result.push_back(Pair("masternode", oMasternode));
+    result.push_back(Pair("masternode_payments_started", true));
+    result.push_back(Pair("masternode_payments_enforced", true));
+
+    networkPayment += masternodePayment + devopsPayment;
 
     // Standard values cont...
     result.push_back(Pair("coinbaseaux", aux));
