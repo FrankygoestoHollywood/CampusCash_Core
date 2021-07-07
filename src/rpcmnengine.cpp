@@ -472,7 +472,7 @@ Value masternode(const Array& params, bool fHelp)
     
         if (params.size() >= 1) strMode = params[0].get_str();
 
-        for(int nHeight = pindexBest->nHeight-10; nHeight < pindexBest->nHeight+20; nHeight++)
+        /*for(int nHeight = pindexBest->nHeight-10; nHeight < pindexBest->nHeight+20; nHeight++)
         {
             CTxIn vin;// TODO: Refactor in order to remove this like "payee" was
             CScript payee;
@@ -490,7 +490,7 @@ Value masternode(const Array& params, bool fHelp)
             } else {
                 obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       ""));
             }
-        }
+        }*/
 
         return obj;
     }

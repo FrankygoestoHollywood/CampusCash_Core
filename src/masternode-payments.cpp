@@ -148,13 +148,17 @@ uint64_t CMasternodePayments::CalculateScore(uint256 blockHash, CTxIn& vin)
 }
 
 
-bool CMasternodePayments::GetWinningMasternode(int nBlockHeight, CTxIn& vin, CScript& payee)
+bool CMasternodePayments::GetWinningMasternode(CBlockIndex* pindexLast, CTxIn& vin, CScript& payee)
 {
-    if(mWinning.count(nBlockHeight) != 0)
+    if(IsInitialBlockDownload() || !mnEnginePool.IsMasternodeListSynced()) return false;
+
+    CMasternode* winningNode = mnodeman.GetMasterNodeWinner(pindexLast);
+
+    if(winningNode)
     {
-        vin = mWinning[nBlockHeight].vin;
-        payee = mWinning[nBlockHeight].payee;
-        return true;
+        payee = GetScriptForDestination(winningNode->pubkey.GetID());
+        vin = winningNode->vin;
+        return true; 
     }
 
     return false;

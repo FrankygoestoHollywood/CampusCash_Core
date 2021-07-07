@@ -40,11 +40,10 @@ void VRX_ThreadCurve(const CBlockIndex* pindexLast, bool fProofOfStake);
 void VRX_Dry_Run(const CBlockIndex* pindexLast);
 unsigned int VRX_Retarget(const CBlockIndex* pindexLast, bool fProofOfStake);
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);
-bool fMNtier2();
-int64_t GetProofOfWorkReward(int64_t nFees);
-int64_t GetProofOfStakeReward(int64_t nFees);
-int64_t GetMasternodePayment();
-int64_t GetTier2MasternodeBonusPayment(CTxIn& vin);
-int64_t GetDevOpsPayment();
+int64_t GetProofOfWorkReward(const CBlockIndex* pindexLast, int64_t nFees);
+int64_t GetProofOfStakeReward(const CBlockIndex* pindexLast, int64_t nFees);
+int64_t GetMasternodePayment(const CBlockIndex* pindexLast);
+int64_t GetTier2MasternodeBonusPayment(const CBlockIndex* pindexLast, CTxIn& vin);
+int64_t GetDevOpsPayment(const CBlockIndex* pindexLast);
 
 #endif // BITCOIN_BLOCKPARAMS_H

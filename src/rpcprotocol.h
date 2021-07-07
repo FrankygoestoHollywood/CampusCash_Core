@@ -79,6 +79,7 @@ enum RPCErrorCode
     // P2P client errors
     RPC_CLIENT_NOT_CONNECTED        = -9,  // CampusCash is not connected
     RPC_CLIENT_IN_INITIAL_DOWNLOAD  = -10, // Still downloading initial blocks
+    RPC_CLIENT_SYNCING_MN_LIST      = -31, // Syncing MN list
     RPC_CLIENT_NODE_ALREADY_ADDED   = -23, // Node is already added
     RPC_CLIENT_NODE_NOT_ADDED       = -24, // Node has not been added before
     RPC_CLIENT_INVALID_IP_OR_SUBNET = -30, //! Invalid IP/Subnet

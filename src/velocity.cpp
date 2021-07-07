@@ -160,7 +160,7 @@ bool Velocity(CBlockIndex* prevBlock, CBlock* block)
         if(block->IsProofOfStake())
         {
             fpayment = false;
-            devopsPayment = GetDevOpsPayment();
+            devopsPayment = GetDevOpsPayment(prevBlock);
             // Set block TX values
             BOOST_FOREACH(const CTransaction& tx, block->vtx)
             {

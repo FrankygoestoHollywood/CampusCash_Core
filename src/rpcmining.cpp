@@ -14,6 +14,7 @@
 #include "init.h"
 #include "miner.h"
 #include "kernel.h"
+#include "mnengine.h"
 
 #include <boost/assign/list_of.hpp>
 
@@ -49,7 +50,7 @@ Value getsubsidy(const Array& params, bool fHelp)
             "getsubsidy [nTarget]\n"
             "Returns proof-of-work subsidy value for the specified value of target.");
 
-    return (int64_t)GetProofOfStakeReward(0);
+    return (int64_t)GetProofOfStakeReward(pindexBest, 0);
 }
 
 Value getstakesubsidy(const Array& params, bool fHelp)
@@ -73,12 +74,12 @@ Value getstakesubsidy(const Array& params, bool fHelp)
 
     CTxIn vin;
     CScript payee;
-    if(masternodePayments.GetWinningMasternode(pindexBest->nHeight+1, vin, payee))
+    if(masternodePayments.GetWinningMasternode(pindexBest, vin, payee))
     {   
-        return (uint64_t)GetProofOfStakeReward(0) + (uint64_t)GetTier2MasternodeBonusPayment(vin);
+        return (uint64_t)GetProofOfStakeReward(pindexBest, 0) + (uint64_t)GetTier2MasternodeBonusPayment(pindexBest, vin);
     } 
         
-    return (uint64_t)GetProofOfStakeReward(0);
+    return (uint64_t)GetProofOfStakeReward(pindexBest, 0);
 }
 
 Value getmininginfo(const Array& params, bool fHelp)
@@ -93,13 +94,13 @@ Value getmininginfo(const Array& params, bool fHelp)
         nWeight = pwalletMain->GetStakeWeight();
 
     // Define block rewards
-    int64_t nRewardPoW = GetProofOfWorkReward(0);
-    int64_t nRewardPoS = GetProofOfStakeReward(0);
+    int64_t nRewardPoW = GetProofOfWorkReward(pindexBest, 0);
+    int64_t nRewardPoS = GetProofOfStakeReward(pindexBest, 0);
     CTxIn vin;
     CScript payee;
-    if(masternodePayments.GetWinningMasternode(pindexBest->nHeight+1, vin, payee))
+    if(masternodePayments.GetWinningMasternode(pindexBest, vin, payee))
     {   
-        int64_t tier2Bonus = GetTier2MasternodeBonusPayment(vin);
+        int64_t tier2Bonus = GetTier2MasternodeBonusPayment(pindexBest, vin);
         nRewardPoW += tier2Bonus;
         nRewardPoS += tier2Bonus;
     } 
@@ -190,6 +191,9 @@ Value checkkernel(const Array& params, bool fHelp)
 
     if (IsInitialBlockDownload())
         throw JSONRPCError(-10, "CampusCash is downloading blocks...");
+
+    if (!mnEnginePool.IsMasternodeListSynced())
+        throw JSONRPCError(RPC_CLIENT_SYNCING_MN_LIST, "CampusCash is syncing the masternodes list...");
 
     COutPoint kernel;
     CBlockIndex* pindexPrev = pindexBest;
@@ -285,6 +289,9 @@ Value getworkex(const Array& params, bool fHelp)
 
     if (IsInitialBlockDownload())
         throw JSONRPCError(-10, "CampusCash is downloading blocks...");
+
+    if (!mnEnginePool.IsMasternodeListSynced())
+        throw JSONRPCError(RPC_CLIENT_SYNCING_MN_LIST, "CampusCash is syncing the masternodes list...");    
 
     if (pindexBest->nHeight >= Params().EndPoWBlock()){
         if(pindexBest->GetBlockTime() >= nPoWToggle){
@@ -424,6 +431,9 @@ Value getwork(const Array& params, bool fHelp)
 
     if (IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "CampusCash is downloading blocks...");
+
+    if (!mnEnginePool.IsMasternodeListSynced())
+        throw JSONRPCError(RPC_CLIENT_SYNCING_MN_LIST, "CampusCash is syncing the masternodes list...");
 
     if(pindexBest->nHeight >= Params().EndPoWBlock_v2()){
         throw JSONRPCError(RPC_MISC_ERROR, "No more PoW blocks");
@@ -579,6 +589,9 @@ Value getblocktemplate(const Array& params, bool fHelp)
     if (IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "CampusCash is downloading blocks...");
 
+    if (!mnEnginePool.IsMasternodeListSynced())
+        throw JSONRPCError(RPC_CLIENT_SYNCING_MN_LIST, "CampusCash is syncing the masternodes list...");
+
     if(pindexBest->nHeight >= Params().EndPoWBlock_v2()){
         throw JSONRPCError(RPC_MISC_ERROR, "No more PoW blocks");
     }
@@ -686,20 +699,20 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("transactions", transactions));
 
     // Set Masternode / DevOps payments
-    int64_t masternodePayment = GetMasternodePayment();
-    int64_t devopsPayment = GetDevOpsPayment();
+    int64_t masternodePayment = GetMasternodePayment(pindexPrev);
+    int64_t devopsPayment = GetDevOpsPayment(pindexPrev);
     std::string devopsPayee = Params().DevOpsAddress();
     std::string masternodePayee;
 
     CTxIn vin;
     CScript payee;
-    if(masternodePayments.GetWinningMasternode(pindexPrev->nHeight+1, vin, payee))
+    if(masternodePayments.GetWinningMasternode(pindexPrev, vin, payee))
     {   
         CTxDestination address1;
         ExtractDestination(payee, address1);
         CBitcoinAddress address2(address1);
         masternodePayee = address2.ToString().c_str();
-        masternodePayment += GetTier2MasternodeBonusPayment(vin);
+        masternodePayment += GetTier2MasternodeBonusPayment(pindexPrev, vin);
     } 
     else 
     {

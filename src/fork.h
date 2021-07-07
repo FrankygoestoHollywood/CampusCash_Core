@@ -19,7 +19,7 @@ static const int64_t nPaymentUpdate_3 = 1562281200;//TODO: Clean this up
 /** New reward structure toggle **/
 static const int64_t nRewardSystemUpdate = 1621778400;
 /** Masternode consensus et pools reward update toggle **/
-static const int64_t nRewardSystemUpdate2 = 1651778400;
+static const int64_t nRewardSystemUpdate2 = 1625610000;
 /** PoW enabled again **/
 static const int64_t nPoWToggle = 1596844820; // Saturday, August 8, 2020 12:00:20 AM (GMT)
 /** Velocity toggle block */

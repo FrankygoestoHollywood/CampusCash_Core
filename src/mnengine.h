@@ -428,6 +428,7 @@ public:
 
     /// from masternode-sync.h
     bool IsBlockchainSynced();
+    bool IsMasternodeListSynced();
 
     /// Check for process in MNengine
     void Check();

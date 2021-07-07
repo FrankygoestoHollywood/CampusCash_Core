@@ -189,6 +189,7 @@ void DumpMasternodes()
 
 CMasternodeMan::CMasternodeMan() {
     nDsqCount = 0;
+    lastDseeReceivedTime = 0;
 }
 
 bool CMasternodeMan::Add(CMasternode &mn)
@@ -321,7 +322,7 @@ int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
     return i;
 }
 
-void CMasternodeMan::DsegUpdate(CNode* pnode)
+bool CMasternodeMan::DsegUpdate(CNode* pnode)
 {
     LOCK(cs);
 
@@ -330,12 +331,14 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
     {
         if (GetTime() < (*it).second) {
             LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
-            return;
+            return false;
         }
     }
     pnode->PushMessage("dseg", CTxIn());
     int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
     mWeAskedForMasternodeList[pnode->addr] = askAgain;
+
+    return true;
 }
 
 CMasternode *CMasternodeMan::Find(const CTxIn &vin)
@@ -446,6 +449,31 @@ CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight,
 
         // calculate the score for each masternode
         uint256 n = mn.CalculateScore(mod, nBlockHeight);
+        unsigned int n2 = 0;
+        memcpy(&n2, &n, sizeof(n2));
+
+        // determine the winner
+        if(n2 > score){
+            score = n2;
+            winner = &mn;
+        }
+    }
+
+    return winner;
+}
+
+CMasternode* CMasternodeMan::GetMasterNodeWinner(CBlockIndex* pindexLast)
+{
+    unsigned int score = 0;
+    CMasternode* winner = NULL;
+
+    // scan for winner
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+        mn.Check();
+        if(!mn.IsEnabled()) continue;
+
+        // calculate the score for each masternode
+        uint256 n = mn.CalculateScore(1, pindexLast->nHeight, pindexLast->GetBlockHash());
         unsigned int n2 = 0;
         memcpy(&n2, &n, sizeof(n2));
 
@@ -609,12 +637,14 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     //Normally would disable functionality, NEED this enabled for staking.
     //if(fLiteMode) return;
 
-    if(!mnEnginePool.IsBlockchainSynced()) return;
+    if(IsInitialBlockDownload()) return;
 
     LOCK(cs_process_message);
 
     if (strCommand == "dsee") { //MNengine Election Entry
 
+        lastDseeReceivedTime = GetTime();
+        
         CTxIn vin;
         CService addr;
         CPubKey pubkey;
@@ -628,6 +658,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CScript donationAddress;
         int donationPercentage;
         std::string strMessage;
+
+
 
         // 70047 and greater
         vRecv >> vin >> addr >> vchSig >> sigTime >> pubkey >> pubkey2 >> count >> current >> lastUpdated >> protocolVersion >> donationAddress >> donationPercentage;

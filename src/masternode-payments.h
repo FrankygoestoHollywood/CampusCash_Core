@@ -90,7 +90,7 @@ public:
     //
 
     uint64_t CalculateScore(uint256 blockHash, CTxIn& vin);
-    bool GetWinningMasternode(int nBlockHeight, CTxIn& vin, CScript& payee);
+    bool GetWinningMasternode(CBlockIndex* pindexLast, CTxIn& vin, CScript& payee);
     bool AddWinningMasternode(CMasternodePaymentWinner& winner);
     bool ProcessBlock(int nBlockHeight);
     void Relay(CMasternodePaymentWinner& winner);

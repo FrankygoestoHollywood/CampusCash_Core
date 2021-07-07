@@ -18,7 +18,7 @@
 #include "masternode.h"
 
 #define MASTERNODES_DUMP_SECONDS               (15*60)
-#define MASTERNODES_DSEG_SECONDS               (3*60*60)
+#define MASTERNODES_DSEG_SECONDS               (3*60)
 
 using namespace std;
 
@@ -68,6 +68,7 @@ private:
 public:
     // keep track of dsq count to prevent masternodes from gaming mnengine queue
     int64_t nDsqCount;
+    int64_t lastDseeReceivedTime;
 
     IMPLEMENT_SERIALIZE
     (
@@ -108,7 +109,7 @@ public:
 
     int CountMasternodesAboveProtocol(int protocolVersion);
 
-    void DsegUpdate(CNode* pnode);
+    bool DsegUpdate(CNode* pnode);
 
     // Find an entry
     CMasternode* Find(const CTxIn& vin);
@@ -125,9 +126,10 @@ public:
 
     // Get the current winner for this block
     CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
+    CMasternode* GetMasterNodeWinner(CBlockIndex* pindexLast);
 
     bool IsPayeeAValidMasternode(CScript payee);
-
+    
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
     std::vector<pair<int, CMasternode> > GetMasternodeRanks(int64_t nBlockHeight, int minProtocol=0);

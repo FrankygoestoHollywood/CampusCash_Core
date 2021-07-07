@@ -366,9 +366,15 @@ void VRX_Dry_Run(const CBlockIndex* pindexLast)
          return;
     }
 
+    if(pindexLast->nHeight == 406094) {
+         // Reset diff for fork (Reward structure enhancement)
+         fDryRun = true;
+         return;
+    }
+
     // Test Fork
     if (nLiveForkToggle != 0) {
-        if (pindexBest->nHeight == nLiveForkToggle) {
+        if (pindexLast->nHeight == nLiveForkToggle) {
             fDryRun = true;
             return;
         }
@@ -486,12 +492,12 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
 //
 // PoW coin base reward
 //
-int64_t GetProofOfWorkReward(int64_t nFees)
+int64_t GetProofOfWorkReward(const CBlockIndex* pindexLast, int64_t nFees)
 {
      int64_t nSubsidy = 0;
 
     // Premine
-    if(pindexBest->nHeight >= nReservePhaseStart)
+    if(pindexLast->nHeight >= nReservePhaseStart && pindexLast->nHeight < 102)
     {
         if(pindexBest->nMoneySupply < (nBlockRewardReserve * 100)) {
             return nBlockRewardReserve;
@@ -502,17 +508,17 @@ int64_t GetProofOfWorkReward(int64_t nFees)
     if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return nFees;
     
     // Old reward structures to allow sync from 0, harcoded timestamps and rewards
-    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    if(pindexLast->GetBlockTime() <= nRewardSystemUpdate)
     {
-        if(pindexBest->GetBlockTime() <= 1596024000) nSubsidy = 83 * COIN;
-        else if(pindexBest->GetBlockTime() <= 1596304800) nSubsidy = 285 * COIN;
+        if(pindexLast->GetBlockTime() <= 1596024000) nSubsidy = 83 * COIN;
+        else if(pindexLast->GetBlockTime() <= 1596304800) nSubsidy = 285 * COIN;
         else nSubsidy = 125 * COIN;
 
         return nSubsidy + nFees;
     }
 
     // Standard reward
-    nSubsidy = (nBlockStandardPoWReward >> (pindexBest->nHeight / 500000)) + nBaseFees;
+    nSubsidy = (nBlockStandardPoWReward >> (pindexLast->nHeight / 500000)) + nBaseFees;
 
     return nSubsidy + nFees;
 }
@@ -520,12 +526,12 @@ int64_t GetProofOfWorkReward(int64_t nFees)
 //
 // PoS coin base reward
 //
-int64_t GetProofOfStakeReward(int64_t nFees)
+int64_t GetProofOfStakeReward(const CBlockIndex* pindexLast, int64_t nFees)
 {
     int64_t nSubsidy = 0;
 
     // Premine
-    if(pindexBest->nHeight >= nReservePhaseStart)
+    if(pindexLast->nHeight >= nReservePhaseStart && pindexLast->nHeight < 102)
     {
         if(pindexBest->nMoneySupply < (nBlockRewardReserve * 100)) {
             return nBlockRewardReserve;
@@ -536,20 +542,20 @@ int64_t GetProofOfStakeReward(int64_t nFees)
     if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return nFees;
 
     // Old reward structures to allow sync from 0, harcoded timestamps and rewards
-    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    if(pindexLast->GetBlockTime() <= nRewardSystemUpdate)
     {
-        if(pindexBest->GetBlockTime() <= 1596024000) nSubsidy = 2.905 * COIN;
-        else if(pindexBest->GetBlockTime() <= 1596304800) nSubsidy = 79.05 * COIN;
-        else if(pindexBest->GetBlockTime() <= 1596585600) nSubsidy = 58.25 * COIN;
-        else if(pindexBest->GetBlockTime() <= 1609804800) nSubsidy = 58.875 * COIN;
+        if(pindexLast->GetBlockTime() <= 1596024000) nSubsidy = 2.905 * COIN;
+        else if(pindexLast->GetBlockTime() <= 1596304800) nSubsidy = 79.05 * COIN;
+        else if(pindexLast->GetBlockTime() <= 1596585600) nSubsidy = 58.25 * COIN;
+        else if(pindexLast->GetBlockTime() <= 1609804800) nSubsidy = 58.875 * COIN;
         else nSubsidy = 59.5 * COIN;
 
         return nSubsidy + nFees;
     }
 
     // Standard reward
-    if(pindexBest->nHeight <= 500000) nSubsidy = nBasePoSReward2 + nBaseFees;
-    else if(pindexBest->nHeight <= 1000000) nSubsidy = nBasePoSReward3 + nBaseFees;
+    if(pindexLast->nHeight <= 500000) nSubsidy = nBasePoSReward2 + nBaseFees;
+    else if(pindexLast->nHeight <= 1000000) nSubsidy = nBasePoSReward3 + nBaseFees;
     else nSubsidy = nBasePoSReward4 + nBaseFees;
 
     return nSubsidy + nFees;
@@ -558,7 +564,7 @@ int64_t GetProofOfStakeReward(int64_t nFees)
 //
 // Masternode coin base reward
 //
-int64_t GetMasternodePayment()
+int64_t GetMasternodePayment(const CBlockIndex* pindexLast)
 {
     int64_t ret2 = 0;
 
@@ -566,9 +572,9 @@ int64_t GetMasternodePayment()
     if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return 0;
 
     // Old reward structures to allow sync from 0, harcoded timestamps and rewards
-    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    if(pindexLast->GetBlockTime() <= nRewardSystemUpdate)
     {
-        if(pindexBest->GetBlockTime() <= 1596024000) return 0;
+        if(pindexLast->GetBlockTime() <= 1596024000) return 0;
         return 42 * COIN;
     }
     
@@ -581,7 +587,7 @@ int64_t GetMasternodePayment()
 //
 // Masternode Tier2 bonus reward
 //
-int64_t GetTier2MasternodeBonusPayment(CTxIn& vin)
+int64_t GetTier2MasternodeBonusPayment(const CBlockIndex* pindexLast, CTxIn& vin)
 {
     int64_t ret2 = 0;
 
@@ -589,7 +595,7 @@ int64_t GetTier2MasternodeBonusPayment(CTxIn& vin)
     if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return 0;
     
     // Old reward structures to allow sync from 0
-    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    if(pindexLast->GetBlockTime() <= nRewardSystemUpdate)
     {
         return 0;
     }
@@ -606,7 +612,7 @@ int64_t GetTier2MasternodeBonusPayment(CTxIn& vin)
 //
 // DevOps coin base reward
 //
-int64_t GetDevOpsPayment()
+int64_t GetDevOpsPayment(const CBlockIndex* pindexLast)
 {
     int64_t ret2 = 0;
 
@@ -614,10 +620,10 @@ int64_t GetDevOpsPayment()
     if(pindexBest->nMoneySupply > MAX_SINGLE_TX) return 0;
     
     // Old reward structures to allow sync from 0, harcoded timestamps and rewards
-    if(pindexBest->GetBlockTime() <= nRewardSystemUpdate)
+    if(pindexLast->GetBlockTime() <= nRewardSystemUpdate)
     {
-        if(pindexBest->GetBlockTime() <= 1596024000) return 16 * COIN;
-        if(pindexBest->GetBlockTime() <= 1596304801) return 28.5 * COIN;
+        if(pindexLast->GetBlockTime() <= 1596024000) return 16 * COIN;
+        if(pindexLast->GetBlockTime() <= 1596304801) return 28.5 * COIN;
         return 12.5 * COIN;
     }
     

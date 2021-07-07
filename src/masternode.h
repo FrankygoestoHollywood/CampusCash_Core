@@ -139,7 +139,7 @@ public:
         return !(a.vin == b.vin);
     }
 
-    uint256 CalculateScore(int mod=1, int64_t nBlockHeight=0);
+    uint256 CalculateScore(int mod=1, int64_t nBlockHeight=0, uint256 prevHash=0);
 
     IMPLEMENT_SERIALIZE
     (
