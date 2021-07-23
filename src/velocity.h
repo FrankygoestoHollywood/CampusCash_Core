@@ -14,7 +14,6 @@
 class CBlock;
 class CBlockIndex;
 
-// Velocity Parameters
 static const          int VELOCITY_HEIGHT[]    = { VELOCITY_TOGGLE }; /** Height to start Velocity */
 static const          int VELOCITY_TERMINAL[]  = { VELOCITY_TDIFF }; /** Height to start Velocity retargetting */
 static const          int VELOCITY_MAX_RATE[]  = { BLOCK_SPACING_MAX }; /** Rate to Velocity in seconds */
@@ -34,4 +33,5 @@ bool RollingCheckpoints(int nHeight);
 extern bool VELOCITY_FACTOR; /** Treat Switches as factors of Block Scanning */
 extern uint256 RollingBlock;
 extern int64_t RollingHeight;
+
 #endif

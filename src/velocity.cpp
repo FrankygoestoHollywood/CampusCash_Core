@@ -16,6 +16,7 @@ bool VELOCITY_FACTOR = false;
 uint256 RollingBlock;
 int64_t RollingHeight;
 
+
 /* VelocityI(int nHeight) ? i : -1
    Returns i or -1 if not found */
 int VelocityI(int nHeight)
@@ -30,10 +31,13 @@ int VelocityI(int nHeight)
    Returns true if nHeight is higher or equal to VELOCITY_HEIGHT */
 bool Velocity_check(int nHeight)
 {
+    LogPrintf("Checking for Velocity on block %u: ",nHeight);
     if(VelocityI(nHeight) >= VELOCITY_HEIGHT[nHeight])
     {
+        LogPrintf("Velocity is currently Enabled\n");
         return true;
     }
+    LogPrintf("Velocity is currently disabled\n");
     return false;
 }
 
@@ -73,9 +77,9 @@ bool Velocity(CBlockIndex* prevBlock, CBlock* block)
     SYSbaseStamp = GetTime() + VELOCITY_MIN_RATE[i];
 
     if(block->IsProofOfStake()) {
-        tx_threshold = GetProofOfStakeReward(pindexBest, 0, 0);
+        tx_threshold = GetProofOfStakeReward(pindexBest, 0);
     } else {
-        tx_threshold = GetProofOfWorkReward(pindexBest->nHeight, 0);
+        tx_threshold = GetProofOfWorkReward(pindexBest, 0);
     }
 
     // Factor in TXs for Velocity constraints
@@ -123,7 +127,7 @@ bool Velocity(CBlockIndex* prevBlock, CBlock* block)
             LogPrintf("DENIED: block contains invalid coin supply amount\n");
             return false;
         }
-        // Check for and enforce minimum TXs per block (Minimum TXs are disabled for DigitalNote)
+        // Check for and enforce minimum TXs per block (Minimum TXs are disabled for CampusCash)
         if(VELOCITY_MIN_TX[i] > 0 && TXcount < VELOCITY_MIN_TX[i])
         {
             LogPrintf("DENIED: Not enough TXs in block\n");
@@ -134,7 +138,7 @@ bool Velocity(CBlockIndex* prevBlock, CBlock* block)
     // Verify minimum Velocity rate
     if( VELOCITY_RATE[i] > 0 && TXrate >= VELOCITY_MIN_RATE[i] )
     {
-        //LogPrintf("CHECK_PASSED: block spacing has met Velocity constraints\n");
+        LogPrintf("CHECK_PASSED: block spacing has met Velocity constraints\n");
     }
     // Rates that are too rapid are rejected without exception
     else if( VELOCITY_RATE[i] > 0 && TXrate < VELOCITY_MIN_RATE[i] )
@@ -169,6 +173,7 @@ bool Velocity(CBlockIndex* prevBlock, CBlock* block)
     }
 
     // Velocity constraints met, return block acceptance
+    LogPrintf("ACCEPTED: block has met all Velocity constraints\n");
     return true;
 }
 
