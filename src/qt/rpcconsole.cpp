@@ -138,7 +138,7 @@ bool parseCommandLine(std::vector<std::string> &args, const std::string &strComm
             break;
         }
     }
-    switch(state) // final state
+    switch(state) // rev state
     {
     case STATE_EATING_SPACES:
         return true;
