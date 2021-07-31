@@ -291,7 +291,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/limitedmap.h \
     src/qt/fractalui.h \
     src/qt/tokenui.h \
-    src/qt/nftui.h \
     src/qt/overviewpage.h \
     src/qt/csvmodelwriter.h \
     src/crypter.h \
@@ -335,7 +334,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/fractal/fractalcontract.h \
     src/fractal/fractalparams.h \
     src/fractal/fractaldataob.h \
-    src/fractal/fractalnftbase.h \
     src/fractal/fractalnft.h \
     src/fractal/fractalbvac.h \
     src/qt/masternodemanager.h \
@@ -447,12 +445,10 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/pbkdf2.cpp \
     src/qt/fractalui.cpp \
     src/qt/tokenui.cpp \
-    src/qt/nftui.cpp \
     src/fractal/fractalengine.cpp \
     src/fractal/fractalcontract.cpp \
     src/fractal/fractalparams.cpp \
     src/fractal/fractaldataob.cpp \
-    src/fractal/fractalnftbase.cpp \
     src/fractal/fractalnft.cpp \
     src/fractal/fractalbvac.cpp \
     src/support/cleanse.cpp \
@@ -520,7 +516,6 @@ FORMS += \
     src/qt/forms/settingspage.ui \
     src/qt/forms/fractalui.ui \
     src/qt/forms/tokenui.ui \
-    src/qt/forms/nftui.ui \
     src/qt/plugins/mrichtexteditor/mrichtextedit.ui
 
 contains(USE_QRCODE, 1) {

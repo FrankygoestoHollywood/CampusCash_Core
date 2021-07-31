@@ -8,7 +8,6 @@
 //
 // This is a completely experimental smart-contract platform written by
 // CryptoCoderz (Jonathan Dan Zaretsky - cryptocoderz@gmail.com)
-// dmEgc2xhdnUgZ29zcG9kZSBib2dlIGUgbmFzaCBzcGFzZXRhbCBlc3VzIGhyaXN0b3M=
 //
 // PLEASE USE AT YOUR OWN RISK!!!
 //
@@ -65,6 +64,7 @@ static const char fractalSCRIPT_charset[] =
 // NFTADDBURN - define total addition coins to burn into an NFT (optional, permanently associates coins/tokens to the NFT)
 // NFTPUB - define whether or not the NFT can be viewed publicly (ownership is stil controlled by a private key)
 // NFTTIER - define NFT feature tier (4 tier option for NFT size, 1 = 16x16, 2 = 32x32, 3 = 64x64, 4 = 128x128)
+// GBBs - Graphed Binary Bit, used to store data set instructions for CPUs to recreate an instruction set
 // GENSC - flags the parser for new smart contract generation
 //
 std::string fractalSCRIPT_methods[30] = { "SETPARAMS", "OBFUSCATION", "SETALIAS", "SETTYPE",
@@ -77,7 +77,6 @@ void write_contractDATA(std::string obfuscated_write_string, std::string contrac
     //
     //obfuscated_write_string = Obfuscated_Combined_String;
     //contract_alias = selected_contract_alias;
-
     boost::filesystem::path pathConfigFile(GetDataDir());
     boost::filesystem::path pathConfigDir(GetDataDir());
 
@@ -114,8 +113,8 @@ void write_contractDATA(std::string obfuscated_write_string, std::string contrac
                // Returns our config path, created config file is loaded during initial run...
                return ;
     } else {
-               FILE* ConfFile = fopen(pathConfigFile.string().c_str(), "w");
-               fprintf(ConfFile, "\n%s|%s\n", obfuscated_write_string.c_str(), contract_alias.c_str());
+                FILE* ConfFile = fopen(pathConfigFile.string().c_str(), "w");
+                fprintf(ConfFile, "\n%s|%s\n", obfuscated_write_string.c_str(), contract_alias.c_str());
                //fprintf(ConfFile, "data\n");
                //fprintf(ConfFile, "data\n");
 
@@ -126,15 +125,10 @@ void write_contractDATA(std::string obfuscated_write_string, std::string contrac
     }
 }
 
-void read_contractDATA(std::string contract_alias, int contract_type) {
+void read_contractDATA(std::string obfuscated_read_string, std::string contract_alias, int contract_type) {
     //
-    boost::filesystem::path pathConfigFile(GetDataDir());
-    std::string cleaned_Path = pathConfigFile.string().c_str();
-    std::replace( cleaned_Path.begin(), cleaned_Path.end(), '\\', '/');
-    cleaned_Path += "/" + contract_alias;
-    ext_Contract_Path = cleaned_Path + ".jpg";
-    cleaned_Path += ".ftl";
-    open_smartCONTRACT(cleaned_Path, contract_type);
+    obfuscated_read_string = Obfuscated_Combined_String;
+    contract_alias = selected_contract_alias;
 }
 
 void parse_fractalSCRIPT(std::string fractal_SCRIPT) {

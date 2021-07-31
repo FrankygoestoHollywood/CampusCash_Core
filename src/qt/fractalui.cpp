@@ -1,5 +1,5 @@
 // Copyright (c) 2017-2021 The Espers Project/CryptoCoderz Team
-// Copyright (c) 2020-2021 The CampusCash Team
+// Copyright (c) 2021 The CampusCash Project
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "fractalui.h"
@@ -12,12 +12,9 @@
 #include "guiconstants.h"
 
 #include "fractal/fractalcontract.h"
-// Added for reading fractal contracts
-#include "fractal/fractalengine.h"
 
 #include <QAbstractItemDelegate>
 #include <QPainter>
-#include <QFileDialog>
 
 #define DECORATION_SIZE 48
 #define NUM_ITEMS 10
@@ -38,36 +35,8 @@ void FractalUI::on_cCON_clicked()
 {
     if (ui->contractTypeCombo->currentText() == "NFT")
     {
-        // Have user select file to decode
-        QString NFT_name = QFileDialog::getOpenFileName(nullptr, "NFT Creation: Select an Image" , ".", "Images (*.png *.jpg)" );
-        create_smartCONTRACT(NFT_name.toStdString(), "nftGENESIS001", 3);
+        create_smartCONTRACT("image.jpg", "nftGENESIS001", 3);
     } else {
         create_smartCONTRACT("this is only a test", "tokenGENESIS001", 0);
-        // Inform user
-        QMessageBox::information(this, "Fractal Encoder",
-                        "The Fractal platform has written the contract data.",
-                        QMessageBox::Ok );
     }
 } 
-
-void FractalUI::on_netTokensBtn_clicked()
-{
-    read_contractDATA("tokenGENESIS001", 0);
-
-    if(fextTokenDecodeSuccess) {
-        // Inform user of success
-        QMessageBox::information(this, "DeOb Decode Success",
-                        "The DeOb system was successfully decoded the test genesis Token data!",
-                        QMessageBox::Ok );
-    } else {
-        // Inform user of failure
-        QMessageBox::warning(this, "DeOb Decode Failure",
-                        "The DeOb system was unable to decode the test genesis Token data...",
-                        QMessageBox::Ok );
-    }
-}
-
-void FractalUI::on_netNFTbtn_clicked()
-{
-    read_contractDATA("nftGENESIS001", 3);
-}

@@ -1,5 +1,5 @@
 // Copyright (c) 2017-2021 The Espers Project/CryptoCoderz Team
-// Copyright (c) 2020-2021 The CampusCash Team
+// Copyright (c) 2021 The CampusCash Project
 
 #ifndef FRACTALUI_H
 #define FRACTALUI_H
@@ -37,8 +37,6 @@ private:
 private slots:
 
         void on_cCON_clicked();
-        void on_netTokensBtn_clicked();
-        void on_netNFTbtn_clicked();
 };
 
 #endif // FRACTALUI_H
