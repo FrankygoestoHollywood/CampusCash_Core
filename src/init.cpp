@@ -1168,6 +1168,17 @@ bool AppInit2(boost::thread_group& threadGroup)
         LogPrintf("Staking disabled\n");
     else if (pwalletMain)
         threadGroup.create_thread(boost::bind(&ThreadStakeMiner, pwalletMain));
+
+    if(pwalletMain->IsLocked())
+    {
+        //Toggle wallet lock status
+        settingsStatus = true;
+    }
+    else
+    {
+        // Toggle wallet lock status
+        settingsStatus = false;
+    }
 #endif
 
     // ********************************************************* Step 12: finished

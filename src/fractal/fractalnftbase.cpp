@@ -15,7 +15,7 @@
 
 #include "fractalnftbase.h"
 // for logprintf
-#include "util/init.h"
+#include "init.h"
 
 // Global RGB(A) value setting
 int n;
