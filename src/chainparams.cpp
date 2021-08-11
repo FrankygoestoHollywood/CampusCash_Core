@@ -97,7 +97,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
 
-         vSeeds.push_back(CDNSSeedData("node0",  "91.132.144.89")); // Official Seed Node
+         //vSeeds.push_back(CDNSSeedData("node0",  "91.132.144.89")); // Official Seed Node
 
 
         convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
