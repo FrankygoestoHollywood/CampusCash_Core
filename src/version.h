@@ -56,7 +56,7 @@ static const int CADDR_TIME_VERSION = 31402;
 
 // only request blocks from nodes outside this range of versions
 static const int NOBLKS_VERSION_START = 0;
-static const int NOBLKS_VERSION_END = 62029;
+static const int NOBLKS_VERSION_END = 62045;
 
 // hard cutoff time for legacy network connections
 static const int64_t HRD_LEGACY_CUTOFF = 1603324800; // ON (Thursday, October 22, 2020 12:00:00 AM)
