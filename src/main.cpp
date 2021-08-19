@@ -2112,9 +2112,10 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     if (pfinglonger > BLOCK_REORG_MAX_DEPTH) {
         return error("Reorganize() : Maximum depth exceeded");
     }
-    if (pfinglonger < BLOCK_REORG_MIN_DEPTH) {
+    /*if (pfinglonger < BLOCK_REORG_MIN_DEPTH) {
         return error("Reorganize() : Minimum depth exceeded");
-    }
+    }*/
+    //Rewrite pending, temp patch to prevent chain split
 
     // Get a checkpoint for quality assurance
     if (fRollingCheckpoint) {
