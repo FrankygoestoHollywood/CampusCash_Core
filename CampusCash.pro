@@ -577,7 +577,7 @@ equals(QMAKE_HOST.arch, arm64) {
 }
 
 isEmpty(BDB_LIB_PATH) {
-    macx:BDB_LIB_PATH = $${LIBOSXPATH}/opt/berkeley-db@4/lib
+    macx:BDB_LIB_PATH = $${LIBOSXPATH}/Cellar/BerkeleyDB.6.2/lib
     windows:BDB_LIB_PATH=C:/dev/coindeps32/bdb-4.8/lib
 }
 
@@ -586,7 +586,7 @@ isEmpty(BDB_LIB_SUFFIX) {
 }
 
 isEmpty(BDB_INCLUDE_PATH) {
-    macx:BDB_INCLUDE_PATH = $${LIBOSXPATH}/opt/berkeley-db@4/include
+    macx:BDB_INCLUDE_PATH = $${LIBOSXPATH}/Cellar/BerkeleyDB.6.2/include
     windows:BDB_INCLUDE_PATH=C:/dev/coindeps32/bdb-4.8/include
 }
 
@@ -604,6 +604,7 @@ isEmpty(QRENCODE_LIB_PATH) {
     macx:QRENCODE_LIB_PATH = $${LIBOSXPATH}/Cellar/qrencode/4.1.1/lib
 	windows:QRENCODE_LIB_PATH=C:/deps/qrencode-3.4.4/.libs	
 }
+
 
 isEmpty(QRENCODE_INCLUDE_PATH) {
     macx:QRENCODE_INCLUDE_PATH = $${LIBOSXPATH}/Cellar/qrencode/4.1.1/include
