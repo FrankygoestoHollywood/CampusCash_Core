@@ -38,7 +38,7 @@ static const int INIT_PROTO_VERSION = 209;
 
 // disconnect from peers older than this proto version
 
-static const int MIN_PEER_PROTO_VERSION = 62046;
+static const int MIN_PEER_PROTO_VERSION = 62047;
 
 // minimum peer version accepted by MNenginePool
 static const int MIN_POOL_PEER_PROTO_VERSION = 62017;
