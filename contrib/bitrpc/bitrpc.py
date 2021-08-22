@@ -91,9 +91,9 @@ elif cmd == "getgenerate":
 	except:
 		print "\n---An error occurred---\n"
 
-elif cmd == "gethashcampuscashec":
+elif cmd == "gethashpersec":
 	try:
-		print access.gethashcampuscashec()
+		print access.gethashpersec()
 	except:
 		print "\n---An error occurred---\n"
 
