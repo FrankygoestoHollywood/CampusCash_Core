@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The CryptoCoderz Team / Espers
+// Copyright (c) 2015-2020 The CryptoCoderz Team / Espers
 // Copyright (c) 2018-2020 The CryptoCoderz Team / INSaNe project
 // Copyright (c) 2016-2020 The Rubix project
 // Copyright (c) 2020 The CampusCash project
