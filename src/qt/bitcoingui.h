@@ -156,7 +156,7 @@ private:
     /** Create the main UI actions. */
     void createActions();
     /** Create the menu bar and sub-menus. */
-    //void createMenuBar();
+    void createMenuBar();
     /** Create the toolbars */
     void createToolBars();
     /** Create system tray (notification) icon */

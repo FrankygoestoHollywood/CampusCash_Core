@@ -127,7 +127,7 @@ CampusCashGUI::CampusCashGUI(QWidget *parent):
     createActions();
 
     // Create application menu bar
-    //createMenuBar();
+    createMenuBar();
 
     // Create the toolbars
     createToolBars();
@@ -436,42 +436,42 @@ void CampusCashGUI::createActions()
     connect(openDataDirAction, SIGNAL(triggered()), this, SLOT(openDataDir()));
 }
 
-//void CampusCashGUI::createMenuBar()
-//{
-//#ifdef Q_OS_MAC
-    //appMenuBar = new QMenuBar();
-//#else
-    //appMenuBar = menuBar();
-//#endif
+void CampusCashGUI::createMenuBar()
+{
+#ifdef Q_OS_MAC
+    appMenuBar = new QMenuBar();
+#else
+    appMenuBar = menuBar();
+#endif
 
-    // Configure the menus
-    //QMenu *file = appMenuBar->addMenu(tr("&File"));
-    //file->addAction(backupWalletAction);
-    //file->addAction(importPrivateKeyAction);
-    //file->addAction(exportAction);
-    //file->addAction(signMessageAction);
-    //file->addAction(verifyMessageAction);
-    //file->addSeparator();
-    //file->addAction(quitAction);
+//     Configure the menus
+    QMenu *file = appMenuBar->addMenu(tr("&File"));
+    file->addAction(backupWalletAction);
+    file->addAction(importPrivateKeyAction);
+    file->addAction(exportAction);
+    file->addAction(signMessageAction);
+    file->addAction(verifyMessageAction);
+    file->addSeparator();
+    file->addAction(quitAction);
 
-    //QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
-    //settings->addAction(encryptWalletAction);
-    //settings->addAction(changePassphraseAction);
-    //settings->addAction(unlockWalletAction);
-    //settings->addAction(lockWalletAction);
-    //settings->addSeparator();
-    //settings->addAction(optionsAction);
-    //settings->addAction(showBackupsAction);
+    QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
+    settings->addAction(encryptWalletAction);
+    settings->addAction(changePassphraseAction);
+    settings->addAction(unlockWalletAction);
+    settings->addAction(lockWalletAction);
+    settings->addSeparator();
+    settings->addAction(optionsAction);
+    settings->addAction(showBackupsAction);
 
-    //QMenu *help = appMenuBar->addMenu(tr("&Help"));
-    //help->addAction(openRPCConsoleAction);
-    //help->addAction(openDataDirAction);
-    //help->addAction(editConfigAction);
-    //help->addAction(editConfigExtAction);
-    //help->addSeparator();
-    //help->addAction(aboutAction);
-    //help->addAction(aboutQtAction);
-//}
+    QMenu *help = appMenuBar->addMenu(tr("&Help"));
+    help->addAction(openRPCConsoleAction);
+    help->addAction(openDataDirAction);
+    help->addAction(editConfigAction);
+    help->addAction(editConfigExtAction);
+    help->addSeparator();
+    help->addAction(aboutAction);
+    help->addAction(aboutQtAction);
+}
 
 static QWidget* makeToolBarSpacer()
 {
