@@ -7,7 +7,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>CampusCash-Qt</string>
 	<key>CFBundleName</key>
-	<string>CampusCash<string>
+	<string>CampusCash</string>
 	<key>CFBundleIconFile</key>
 	<string>bitcoin.icns</string>
 	<key>CFBundleIdentifier</key>
