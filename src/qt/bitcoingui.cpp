@@ -554,7 +554,7 @@ void CampusCashGUI::createToolBars()
 
 void CampusCashGUI::setClientModel(ClientModel *clientModel)
 {
-    netLabel->setText("v1.1.0.13");// Version in GUI
+    netLabel->setText("v1.1.0.14");// Version in GUI
 
     this->clientModel = clientModel;
     if(clientModel)
