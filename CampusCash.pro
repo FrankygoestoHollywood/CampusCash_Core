@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = CampusCash-Qt5.15.2-Win32-v1.1.0.15
+TARGET = CampusCash-qt
 VERSION = 1.1.0.15
 INCLUDEPATH += src src/json src/qt src/qt/plugins/mrichtexteditor
 QT += core gui widgets network printsupport
