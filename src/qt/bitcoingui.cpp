@@ -445,7 +445,7 @@ void CampusCashGUI::createMenuBar()
 #endif
 
 //     Configure the menus
-    QMenu *file = appMenuBar->addMenu(tr("&File"));
+    /*QMenu *file = appMenuBar->addMenu(tr("&File"));
     file->addAction(backupWalletAction);
     file->addAction(importPrivateKeyAction);
     file->addAction(exportAction);
@@ -470,7 +470,7 @@ void CampusCashGUI::createMenuBar()
     help->addAction(editConfigExtAction);
     help->addSeparator();
     help->addAction(aboutAction);
-    help->addAction(aboutQtAction);
+    help->addAction(aboutQtAction);*/
 }
 
 static QWidget* makeToolBarSpacer()
@@ -554,7 +554,7 @@ void CampusCashGUI::createToolBars()
 
 void CampusCashGUI::setClientModel(ClientModel *clientModel)
 {
-    netLabel->setText("v1.1.0.14");// Version in GUI
+    netLabel->setText("v1.1.0.16");// Version in GUI
 
     this->clientModel = clientModel;
     if(clientModel)

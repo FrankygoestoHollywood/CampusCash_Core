@@ -72,7 +72,7 @@ static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 128;
 /** Timeout in seconds before considering a block download peer unresponsive. */
 static const unsigned int BLOCK_DOWNLOAD_TIMEOUT = 60;
 /** Maximum block reorganize depth (consider else an invalid fork) */
-static const int BLOCK_REORG_MAX_DEPTH = 91; // 1 block after confimation of a block
+static const int BLOCK_REORG_MAX_DEPTH = 91; // 1 block after confimation of a block.
 /** Depth for rolling checkpoing block */
 static const unsigned int BLOCK_TEMP_CHECKPOINT_DEPTH = 120;
 /** Defaults to yes, adaptively increase/decrease max/min/priority along with the re-calculated block size **/
@@ -82,7 +82,7 @@ static const int64_t nDrift = 5 * 60;
 /** Future drift params */
 inline int64_t FutureDrift(int64_t nTime) { return nTime + nDrift; }
 /** Velocity Factor handling toggle */
-inline bool FACTOR_TOGGLE(int nHeight) { return TestNet() || nHeight > 475000; } // One block past issue block: 475000
+inline bool FACTOR_TOGGLE(int nHeight) { return TestNet() || nHeight > 474994; } // One block past issue block: 474994
 /** "reject" message codes **/
 static const unsigned char REJECT_INVALID = 0x10;
 
